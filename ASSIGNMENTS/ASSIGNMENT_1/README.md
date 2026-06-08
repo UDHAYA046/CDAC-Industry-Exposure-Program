@@ -12,8 +12,8 @@
 
 ## Files
 
-- Assignment1.pdf – Assignment Questions
-- UDHAYA_SANKARI_CSEH.pdf – Completed Assignment Submission
+- QUESTIONS.pdf – Assignment Questions
+- SOLUTION.pdf – Completed Assignment Submission
 
 ## Status
 
