@@ -1,7 +1,7 @@
 # Session 4 – Shell Scripting Fundamentals
 
 **Date:** 12 June 2026
-**Duration:** 2:00 PM – 5:00 PM
+**Duration:** 9:30 AM – 11:45 AM
 **Course:** CDAC Industry Exposure Program – Cybersecurity
 
 ---
