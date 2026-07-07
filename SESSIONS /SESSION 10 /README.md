@@ -1,4 +1,4 @@
-<img width="634" height="860" alt="image" src="https://github.com/user-attachments/assets/3f49eb4f-caf6-4fe5-8c8e-d9b932070109" />
+
 # Session 10 – Password Cracking, Exploitation, Privilege Escalation and Post-Exploitation
 ## Part 1 – Overview, Authentication, Password Cracking and Password Storage
 
@@ -2879,3 +2879,1420 @@ Least privilege limits the damage that attackers can cause after compromising an
 - UAC provides an additional security barrier but is not a substitute for proper system hardening.
 - Defenses include least privilege, service hardening, secure coding, regular patching, and strong authentication.
 
+# Session 10 – Password Cracking, Exploitation, Privilege Escalation and Post-Exploitation
+## Part 3B – Windows Services, Service Control Manager (SCM), WMI and WinRM
+
+---
+
+# Windows Services
+
+## Introduction
+
+One of the most important concepts introduced during this session is the Windows Service architecture.
+
+Many beginners think that every program starts only when a user opens it.
+
+This is not true.
+
+Windows contains many background programs that start automatically when the operating system boots.
+
+These programs are called **Windows Services**.
+
+A service is a long-running executable that performs specific functions without requiring direct user interaction.
+
+Examples include:
+
+- Windows Update
+- Print Spooler
+- Windows Defender
+- DHCP Client
+- DNS Client
+- Remote Registry
+- SQL Server
+- Apache
+- MySQL
+
+Services are responsible for keeping the operating system functional.
+
+---
+
+# Characteristics of Windows Services
+
+A Windows Service:
+
+- Runs in the background.
+- Does not require a logged-in user.
+- Starts automatically or manually.
+- Can run continuously for months.
+- Can communicate with hardware.
+- Can communicate with the network.
+- Can execute programs.
+
+---
+
+# Why Services are Important for Attackers
+
+Many services execute with elevated privileges.
+
+Examples:
+
+```text
+SYSTEM
+
+Administrator
+
+Network Service
+
+Local Service
+```
+
+If an attacker can manipulate one of these services,
+
+the malicious program may inherit the same privileges.
+
+This makes Windows Services one of the most common privilege escalation vectors.
+
+---
+
+# Windows Service Lifecycle
+
+```text
+System Boots
+
+↓
+
+Service Control Manager Starts
+
+↓
+
+Required Services Loaded
+
+↓
+
+Service Executes
+
+↓
+
+Waits for Requests
+
+↓
+
+Stops When Requested
+```
+
+---
+
+# Service Startup Types
+
+Windows supports several startup modes.
+
+## Automatic
+
+Starts every time Windows boots.
+
+Example:
+
+```text
+Windows Defender
+```
+
+---
+
+## Automatic (Delayed Start)
+
+Starts shortly after boot to reduce startup load.
+
+---
+
+## Manual
+
+Starts only when requested.
+
+Example:
+
+```text
+Database Service
+```
+
+---
+
+## Disabled
+
+Cannot start until enabled.
+
+---
+
+# Service Accounts
+
+Every service runs under a security account.
+
+Common service accounts include:
+
+## Local System
+
+Highest privilege.
+
+Almost unrestricted access.
+
+---
+
+## Local Service
+
+Limited local permissions.
+
+Minimal network privileges.
+
+---
+
+## Network Service
+
+Limited local permissions.
+
+Can authenticate on the network.
+
+---
+
+## Custom Service Accounts
+
+Organizations often create dedicated service accounts for applications.
+
+Example:
+
+```text
+SQLService
+
+BackupService
+
+WebService
+```
+
+This follows the Principle of Least Privilege.
+
+---
+
+# Why SYSTEM is Dangerous
+
+SYSTEM is more powerful than Administrator.
+
+Capabilities include:
+
+- Access any file
+- Modify registry
+- Load drivers
+- Create users
+- Disable security software
+- Read memory
+
+If malware executes as SYSTEM,
+
+the entire operating system is effectively compromised.
+
+---
+
+# Service Misconfiguration
+
+One of the most common privilege escalation techniques involves weak service configuration.
+
+Suppose:
+
+```text
+BackupService.exe
+```
+
+runs as SYSTEM.
+
+However,
+
+all users have permission to modify the executable.
+
+Workflow:
+
+```text
+Attacker
+
+↓
+
+Replace Service Binary
+
+↓
+
+Restart Service
+
+↓
+
+SYSTEM Executes Malicious Program
+```
+
+This is why file permissions are critical.
+
+---
+
+# Common Service Misconfigurations
+
+Examples include:
+
+- Writable executable
+- Writable service directory
+- Weak registry permissions
+- Weak service permissions
+- Unquoted service paths
+- Incorrect file ownership
+
+Each of these can become a privilege escalation opportunity.
+
+---
+
+# Service Enumeration
+
+During penetration testing,
+
+enumerating Windows Services is an important activity.
+
+Objectives include identifying:
+
+- Service name
+- Executable path
+- Startup type
+- Running account
+- File permissions
+- Service permissions
+
+The goal is to determine whether a service can be abused for privilege escalation.
+
+---
+
+# Service Control Manager (SCM)
+
+## What is SCM?
+
+SCM stands for:
+
+```text
+Service Control Manager
+```
+
+It is a core Windows component responsible for managing services.
+
+SCM performs tasks such as:
+
+- Starting services
+- Stopping services
+- Restarting services
+- Monitoring service state
+- Managing dependencies
+
+Without SCM,
+
+Windows Services cannot operate correctly.
+
+---
+
+# SCM Workflow
+
+```text
+Windows Boots
+
+↓
+
+SCM Starts
+
+↓
+
+Reads Service Configuration
+
+↓
+
+Launches Services
+
+↓
+
+Monitors Services
+
+↓
+
+Restarts if Necessary
+```
+
+---
+
+# Why Attackers Target SCM
+
+If attackers gain permission to modify service configuration,
+
+they may:
+
+- Change executable path
+- Replace service binary
+- Change startup type
+- Execute malicious code
+
+Therefore,
+
+service permissions should always be carefully controlled.
+
+---
+
+# Windows Management Instrumentation (WMI)
+
+## Introduction
+
+The PPT introduces Windows Management Instrumentation (WMI) as a Windows management framework.
+
+WMI provides administrators with a standardized interface for querying and managing Windows systems.
+
+Examples include:
+
+- Hardware information
+- Software inventory
+- Running processes
+- Services
+- Users
+- Operating system information
+
+WMI is widely used by:
+
+- Administrators
+- Monitoring software
+- Asset management systems
+- Enterprise automation tools
+
+---
+
+# WMI Architecture
+
+```text
+Administrator
+
+↓
+
+WMI Query
+
+↓
+
+Windows Management Service
+
+↓
+
+Operating System
+
+↓
+
+Results Returned
+```
+
+---
+
+# Information Available Through WMI
+
+Examples include:
+
+- CPU details
+- Memory
+- Disk drives
+- Installed software
+- Running processes
+- Network adapters
+- Logged-in users
+- BIOS information
+- Operating system version
+
+This makes WMI extremely powerful.
+
+---
+
+# Why Attackers Use WMI
+
+Attackers abuse WMI because:
+
+- It already exists on Windows.
+- It is trusted.
+- Many organizations rely on it.
+- It can execute commands remotely.
+
+Examples:
+
+- Execute PowerShell
+- Launch programs
+- Collect system information
+- Move laterally
+- Schedule persistence
+
+Using WMI often avoids dropping obvious malware onto disk.
+
+---
+
+# Living Off the Land
+
+The instructor indirectly introduced an important concept.
+
+Rather than installing custom malware,
+
+professional attackers frequently abuse built-in administrative tools.
+
+This technique is known as:
+
+```text
+Living Off the Land
+```
+
+Examples include:
+
+- WMI
+- PowerShell
+- cmd.exe
+- WinRM
+- schtasks
+- reg.exe
+
+These tools already exist on Windows,
+
+making them more difficult to detect.
+
+---
+
+# Windows Remote Management (WinRM)
+
+## What is WinRM?
+
+WinRM stands for:
+
+```text
+Windows Remote Management
+```
+
+It is Microsoft's implementation of the WS-Management protocol.
+
+Its purpose is to allow administrators to manage remote Windows systems.
+
+Examples include:
+
+- Execute commands
+- Configure systems
+- Install software
+- Collect logs
+- Run PowerShell remotely
+
+---
+
+# WinRM Workflow
+
+```text
+Administrator
+
+↓
+
+WinRM
+
+↓
+
+Remote Windows Computer
+
+↓
+
+Execute Command
+
+↓
+
+Return Output
+```
+
+---
+
+# Why Organizations Use WinRM
+
+Large organizations may manage:
+
+- Hundreds
+- Thousands
+- Tens of thousands
+
+of Windows computers.
+
+Physically visiting every computer is impossible.
+
+WinRM enables centralized administration.
+
+---
+
+# Why Attackers Target WinRM
+
+If attackers obtain valid administrator credentials,
+
+WinRM may allow:
+
+- Remote command execution
+- Lateral movement
+- Remote PowerShell
+- Remote service management
+
+Therefore,
+
+WinRM is frequently encountered during penetration testing.
+
+---
+
+# PowerShell Remoting
+
+PowerShell Remoting is built on WinRM.
+
+Instead of logging into every computer individually,
+
+administrators execute PowerShell commands remotely.
+
+Example workflow:
+
+```text
+Administrator
+
+↓
+
+PowerShell
+
+↓
+
+WinRM
+
+↓
+
+Remote Machine
+
+↓
+
+Execute Script
+
+↓
+
+Return Results
+```
+
+This greatly simplifies enterprise administration.
+
+---
+
+# WMI vs WinRM
+
+Students often confuse these technologies.
+
+| WMI | WinRM |
+|------|--------|
+| Management framework | Remote management protocol |
+| Queries system information | Executes remote management tasks |
+| Used for inventory and monitoring | Used for remote administration |
+| Can execute commands | Supports PowerShell Remoting |
+| Older management technology | Modern remote administration technology |
+
+---
+
+# Administrative Tools Can Be Abused
+
+Many legitimate administration technologies become dangerous when attackers obtain administrative credentials.
+
+Examples include:
+
+- WMI
+- WinRM
+- PowerShell
+- PsExec
+- Scheduled Tasks
+- Group Policy
+
+The technology itself is not malicious.
+
+Unauthorized use makes it dangerous.
+
+---
+
+# Defensive Measures
+
+Organizations should protect Windows management technologies by:
+
+- Following Least Privilege.
+- Restricting administrator accounts.
+- Monitoring remote administration.
+- Enabling PowerShell logging.
+- Monitoring WMI activity.
+- Restricting WinRM access.
+- Using Multi-Factor Authentication.
+- Applying regular security updates.
+- Monitoring service configuration changes.
+
+---
+
+# Interview Questions
+
+## What is a Windows Service?
+
+A Windows Service is a background process that performs system or application tasks without requiring direct user interaction.
+
+---
+
+## What is the Service Control Manager?
+
+SCM is the Windows component responsible for starting, stopping, monitoring, and managing Windows Services.
+
+---
+
+## Why are Windows Services targeted during privilege escalation?
+
+Because many services execute with elevated privileges such as SYSTEM, and misconfigured services may allow attackers to execute code with those privileges.
+
+---
+
+## What is WMI?
+
+Windows Management Instrumentation is a Windows management framework used to retrieve system information and perform administrative tasks.
+
+---
+
+## What is WinRM?
+
+Windows Remote Management is Microsoft's implementation of the WS-Management protocol used for remote administration of Windows systems.
+
+---
+
+## Difference between WMI and WinRM?
+
+WMI provides system management functionality, while WinRM provides the communication mechanism used for remote management and PowerShell remoting.
+
+---
+
+# Key Takeaways
+
+- Windows Services are long-running background processes managed by the Service Control Manager.
+- Services often execute with elevated privileges, making them attractive privilege escalation targets when misconfigured.
+- The Service Control Manager starts, stops, and monitors Windows Services.
+- Windows Management Instrumentation (WMI) provides powerful system management and inventory capabilities.
+- Windows Remote Management (WinRM) enables remote administration using the WS-Management protocol.
+- PowerShell Remoting is built on WinRM and allows administrators to execute commands remotely.
+- Legitimate administrative technologies such as WMI, WinRM, and PowerShell can be abused if attackers obtain administrative credentials.
+- Proper permission management, logging, monitoring, and least privilege significantly reduce the risk of abuse.
+
+# Session 10 – Password Cracking, Exploitation, Privilege Escalation and Post-Exploitation
+## Part 3C – Remote Administration Tools, Persistence, File Hiding and Rootkits
+
+---
+
+# Remote Administration Tools
+
+## Introduction
+
+Every large organization manages hundreds or even thousands of computers.
+
+It is impractical for an administrator to physically visit every machine whenever software must be installed, updates are required, or troubleshooting is needed.
+
+To solve this problem, organizations use **Remote Administration Tools (RATs)**.
+
+These tools allow administrators to:
+
+- Access remote systems
+- Install software
+- Collect logs
+- Troubleshoot problems
+- Execute commands
+- Deploy updates
+- Monitor system health
+
+The important concept introduced during the session is that **these tools are legitimate administrative utilities**. However, if attackers obtain administrative credentials, the same tools can be abused to move laterally within a network.
+
+---
+
+# Why Remote Administration Tools Exist
+
+Imagine a company with:
+
+```text
+5,000 Computers
+```
+
+Without remote administration:
+
+```text
+Administrator
+
+↓
+
+Walk to Computer 1
+
+↓
+
+Install Software
+
+↓
+
+Walk to Computer 2
+
+↓
+
+Repeat 5,000 Times
+```
+
+Clearly impossible.
+
+Instead:
+
+```text
+Administrator
+
+↓
+
+Remote Administration Tool
+
+↓
+
+All Systems Managed Centrally
+```
+
+---
+
+# Common Features
+
+Most enterprise remote administration tools provide:
+
+- Remote Desktop
+- Remote Command Execution
+- Software Deployment
+- Inventory Collection
+- Patch Management
+- Remote File Transfer
+- PowerShell Execution
+- Event Log Collection
+- Remote Registry Access
+
+---
+
+# PsExec
+
+## What is PsExec?
+
+PsExec is part of Microsoft's Sysinternals Suite.
+
+It allows administrators to execute commands on remote Windows systems.
+
+Instead of opening Remote Desktop,
+
+administrators can directly execute commands remotely.
+
+General workflow:
+
+```text
+Administrator
+
+↓
+
+PsExec
+
+↓
+
+Remote Computer
+
+↓
+
+Execute Command
+
+↓
+
+Return Output
+```
+
+---
+
+# Why Administrators Use PsExec
+
+Common uses include:
+
+- Restarting services
+- Installing software
+- Running scripts
+- Troubleshooting
+- Collecting logs
+
+It is lightweight and widely used in Windows administration.
+
+---
+
+# Why Attackers Like PsExec
+
+If attackers obtain valid administrator credentials,
+
+PsExec allows:
+
+- Remote command execution
+- Lateral movement
+- Malware deployment
+- Remote process execution
+
+The tool itself is legitimate.
+
+Unauthorized use makes it dangerous.
+
+---
+
+# PDQ Deploy
+
+## Purpose
+
+PDQ Deploy is an enterprise software deployment solution.
+
+Administrators use it to install software on multiple computers simultaneously.
+
+Example:
+
+```text
+Administrator
+
+↓
+
+PDQ Deploy
+
+↓
+
+500 Computers
+
+↓
+
+Install Chrome
+```
+
+Instead of manually installing software,
+
+deployment becomes automated.
+
+---
+
+# Security Perspective
+
+If attackers gain access to PDQ Deploy,
+
+they may distribute:
+
+- Malware
+- Backdoors
+- Persistence tools
+
+across many systems simultaneously.
+
+Therefore,
+
+access to deployment servers should be carefully protected.
+
+---
+
+# DameWare
+
+DameWare is another enterprise remote administration platform.
+
+Capabilities include:
+
+- Remote Desktop
+- Remote Command Execution
+- Service Management
+- Event Viewer
+- Registry Editing
+- User Management
+
+It is commonly used by IT support teams.
+
+---
+
+# Ninja
+
+Ninja (often called NinjaOne) is a Remote Monitoring and Management (RMM) platform.
+
+Capabilities include:
+
+- Endpoint monitoring
+- Patch management
+- Remote access
+- Software deployment
+- Asset inventory
+- Performance monitoring
+
+Modern Managed Service Providers (MSPs) frequently use RMM platforms such as Ninja.
+
+---
+
+# ManageEngine Desktop Central
+
+Desktop Central (Endpoint Central) is an enterprise endpoint management solution.
+
+It provides:
+
+- Patch management
+- Software deployment
+- Configuration management
+- Asset inventory
+- Remote troubleshooting
+
+Large organizations use such platforms to centrally manage thousands of devices.
+
+---
+
+# Why Attackers Target RMM Tools
+
+Remote Management software already possesses:
+
+- Administrative privileges
+- Remote connectivity
+- Access to many systems
+
+If compromised,
+
+one management server may provide access to an entire enterprise.
+
+This is why attackers increasingly target RMM infrastructure.
+
+---
+
+# Living Off the Land
+
+Rather than installing suspicious malware,
+
+professional attackers frequently abuse existing administration software.
+
+Examples include:
+
+- PsExec
+- PowerShell
+- WMI
+- WinRM
+- Remote Desktop
+- Scheduled Tasks
+
+This approach reduces the likelihood of detection.
+
+---
+
+# Persistence
+
+## Definition
+
+Persistence refers to techniques that allow attackers to regain access after the initial compromise.
+
+Without persistence,
+
+the attacker loses access when:
+
+- The computer restarts.
+- Passwords are changed.
+- Sessions expire.
+
+Persistence ensures continued access.
+
+---
+
+# Why Persistence Matters
+
+Suppose an attacker successfully compromises a server.
+
+The server restarts overnight.
+
+Without persistence:
+
+```text
+Access Lost
+```
+
+With persistence:
+
+```text
+Restart
+
+↓
+
+Malicious Component Starts Automatically
+
+↓
+
+Attacker Reconnects
+```
+
+---
+
+# Common Persistence Mechanisms
+
+Examples include:
+
+- Startup folders
+- Registry Run Keys
+- Windows Services
+- Scheduled Tasks
+- WMI Event Subscriptions
+- Startup Scripts
+- Browser Extensions
+- Login Scripts
+
+Modern endpoint security products actively monitor these mechanisms.
+
+---
+
+# Hiding Files
+
+The PPT introduces techniques used to conceal files from casual observation.
+
+The objective is not to make files impossible to find,
+
+but rather to reduce the chance of detection.
+
+Examples include:
+
+- Hidden file attributes
+- Alternate Data Streams
+- Steganography
+- Rootkits
+
+---
+
+# Hidden File Attributes
+
+Operating systems allow files to be marked as:
+
+```text
+Hidden
+```
+
+These files are not displayed by default in file explorers.
+
+However,
+
+security professionals can still view them using appropriate tools or settings.
+
+Therefore,
+
+hidden attributes provide very limited protection.
+
+---
+
+# NTFS Alternate Data Streams (ADS)
+
+## Introduction
+
+NTFS supports a feature called Alternate Data Streams.
+
+Normally,
+
+a file contains one stream:
+
+```text
+Document.txt
+```
+
+However,
+
+NTFS allows additional hidden streams to exist.
+
+Example:
+
+```text
+Document.txt:hidden
+```
+
+The visible file appears unchanged,
+
+while additional information exists inside another stream.
+
+---
+
+# Legitimate Uses of ADS
+
+ADS was originally introduced to support compatibility with Macintosh file systems.
+
+Windows also uses ADS for metadata.
+
+Examples include:
+
+- Zone information
+- Download source
+- File properties
+
+---
+
+# Why Attackers Abuse ADS
+
+Attackers may hide:
+
+- Scripts
+- Configuration data
+- Malware components
+
+inside alternate streams.
+
+Casual inspection may not reveal the hidden content.
+
+Modern forensic tools and endpoint protection products can detect ADS.
+
+---
+
+# Steganography
+
+## Definition
+
+Steganography is the process of hiding information inside another file.
+
+Unlike encryption,
+
+the goal is to conceal the existence of the information itself.
+
+Examples include:
+
+- Hidden text inside images
+- Hidden files inside audio
+- Hidden messages inside video
+
+---
+
+# Encryption vs Steganography
+
+Students often confuse these concepts.
+
+## Encryption
+
+Protects the content.
+
+Everyone knows data exists,
+
+but cannot read it.
+
+---
+
+## Steganography
+
+Hides the existence of the data.
+
+Observers may not even realize secret information is present.
+
+---
+
+# Example
+
+Image:
+
+```text
+holiday.jpg
+```
+
+Appears completely normal.
+
+However,
+
+secret information may be embedded inside the image without visibly changing it.
+
+---
+
+# Rootkits
+
+## Definition
+
+A rootkit is malicious software designed to hide the presence of an attacker or malware on a compromised system.
+
+Rather than performing the attack,
+
+its primary purpose is concealment.
+
+---
+
+# Rootkit Objectives
+
+Rootkits attempt to hide:
+
+- Processes
+- Files
+- Registry entries
+- Network connections
+- Services
+- Drivers
+
+This makes detection more difficult.
+
+---
+
+# Types of Rootkits
+
+Examples include:
+
+### User Mode Rootkits
+
+Operate within user applications.
+
+---
+
+### Kernel Mode Rootkits
+
+Execute inside the operating system kernel.
+
+These are more powerful and more difficult to detect.
+
+---
+
+### Bootkits
+
+Execute before the operating system loads.
+
+---
+
+### Firmware Rootkits
+
+Reside inside firmware components.
+
+These are rare but highly persistent.
+
+---
+
+# Why Rootkits Are Dangerous
+
+A successful rootkit may:
+
+- Hide malware
+- Hide attacker activity
+- Hide files
+- Hide network traffic
+- Disable security software
+
+The operating system itself may report false information because the rootkit intercepts requests.
+
+---
+
+# Detecting Rootkits
+
+Detection methods include:
+
+- Memory analysis
+- Integrity verification
+- Offline scanning
+- Boot-time scanning
+- EDR monitoring
+- Kernel integrity checks
+
+Modern endpoint protection products include specialized rootkit detection capabilities.
+
+---
+
+# Blue Team Perspective
+
+Every technique discussed in this section has corresponding defensive controls.
+
+Examples:
+
+| Offensive Technique | Defensive Measure |
+|---------------------|-------------------|
+| PsExec | Restrict admin accounts, monitor remote execution |
+| PowerShell | Enable PowerShell logging |
+| WMI | Monitor WMI event subscriptions |
+| WinRM | Restrict access and require MFA |
+| Hidden Files | Periodic file integrity monitoring |
+| ADS | Endpoint detection tools |
+| Rootkits | Secure Boot, EDR, offline scanning |
+| Persistence | Startup auditing, scheduled task monitoring |
+
+---
+
+# Principle of Least Privilege
+
+Many post-exploitation techniques become impossible if administrators follow:
+
+```text
+Principle of Least Privilege
+```
+
+Users should receive only the permissions necessary for their work.
+
+Administrative privileges should be granted only when required.
+
+---
+
+# Defense in Depth
+
+Organizations should never rely on a single security control.
+
+Instead,
+
+multiple layers should work together.
+
+Example:
+
+```text
+Firewall
+
+↓
+
+Antivirus
+
+↓
+
+EDR
+
+↓
+
+MFA
+
+↓
+
+Least Privilege
+
+↓
+
+Logging
+
+↓
+
+SIEM
+
+↓
+
+Incident Response
+```
+
+Even if one layer fails,
+
+others continue protecting the environment.
+
+---
+
+# Interview Questions
+
+## What is persistence?
+
+Persistence is the ability for an attacker to maintain access to a compromised system even after reboot, logout, or password changes.
+
+---
+
+## What is PsExec?
+
+PsExec is a Microsoft Sysinternals tool used to execute commands on remote Windows systems.
+
+---
+
+## What are Remote Administration Tools?
+
+Remote Administration Tools are legitimate software used by administrators to manage computers remotely. Examples include PsExec, PDQ Deploy, DameWare, and Endpoint Central.
+
+---
+
+## What is an Alternate Data Stream?
+
+An Alternate Data Stream is an NTFS feature that allows multiple data streams to exist within a single file.
+
+---
+
+## Difference between encryption and steganography?
+
+Encryption protects the contents of data.
+
+Steganography hides the existence of the data.
+
+---
+
+## What is a rootkit?
+
+A rootkit is malware designed primarily to hide malicious activity by concealing files, processes, services, drivers, or network connections.
+
+---
+
+# Key Takeaways
+
+- Remote Administration Tools are essential for enterprise system management but may be abused if attackers obtain administrative credentials.
+- PsExec, PDQ Deploy, DameWare, NinjaOne, and Endpoint Central are examples of legitimate administrative tools.
+- Persistence techniques allow attackers to survive system reboots and session termination.
+- NTFS Alternate Data Streams provide additional hidden storage within files and can be abused to conceal malicious content.
+- Steganography hides information inside other files, whereas encryption protects the content of visible data.
+- Rootkits focus on hiding malicious activity rather than performing the initial attack.
+- Defense in depth, least privilege, endpoint detection, monitoring, and regular auditing significantly reduce the effectiveness of post-exploitation techniques.
