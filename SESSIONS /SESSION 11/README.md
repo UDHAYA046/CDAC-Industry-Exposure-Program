@@ -4024,3 +4024,3000 @@ File Integrity Monitoring detects unauthorized file changes, whereas Vulnerabili
 - FIM helps detect malware, web shells, insider threats, and persistence mechanisms.
 - Vulnerability Detection complements FIM by identifying outdated software with known CVEs.
 - Together, these capabilities significantly improve an organization's ability to detect and respond to security threats.
+
+
+# Session 11 – Defensive Security and the Security Operations Centre (SOC)
+## Part 7 – MITRE ATT&CK Framework Integration in Wazuh
+
+**Course:** C-DAC Kolkata – Cybersecurity Industry Exposure Program  
+**Module:** Defensive Security, Threat Detection and MITRE ATT&CK
+
+---
+
+# Introduction
+
+Detecting an attack is only the first step in incident response.
+
+A SOC analyst must also answer questions such as:
+
+- What exactly is the attacker trying to achieve?
+- Which phase of the attack are we observing?
+- Which technique is being used?
+- Has this attack been seen before?
+- What should we investigate next?
+
+To answer these questions consistently across organizations, the cybersecurity community uses the **MITRE ATT&CK Framework**.
+
+Modern SIEM platforms, including Wazuh, map alerts to MITRE ATT&CK techniques so analysts immediately understand where an attacker is in the attack lifecycle.
+
+---
+
+# What is MITRE?
+
+MITRE is a non-profit organization that conducts research in cybersecurity, defense, healthcare, aviation, and many other domains.
+
+One of its most important cybersecurity contributions is the **MITRE ATT&CK Framework**.
+
+MITRE does **not** create malware.
+
+Instead, it documents how real-world attackers behave.
+
+---
+
+# What is MITRE ATT&CK?
+
+MITRE ATT&CK stands for:
+
+```text
+Adversarial Tactics, Techniques,
+and Common Knowledge
+```
+
+It is a publicly available knowledge base that documents attacker behaviour observed in real-world cyber attacks.
+
+Instead of focusing on vulnerabilities,
+
+MITRE focuses on:
+
+- Attacker objectives
+- Attacker techniques
+- Attacker procedures
+
+---
+
+# Purpose of MITRE ATT&CK
+
+MITRE ATT&CK helps organizations:
+
+- Understand attacker behaviour
+- Build better detection rules
+- Improve SOC investigations
+- Map alerts to known attack techniques
+- Perform threat hunting
+- Improve Purple Team exercises
+
+Rather than simply saying:
+
+```text
+SSH Brute Force Detected
+```
+
+the SOC can immediately map the activity to:
+
+```text
+Credential Access
+
+↓
+
+Brute Force
+
+↓
+
+MITRE Technique T1110
+```
+
+---
+
+# ATT&CK Matrix
+
+The ATT&CK Matrix organizes attacker behaviour into:
+
+```text
+Tactics
+
+↓
+
+Techniques
+
+↓
+
+Sub-techniques
+```
+
+Each level provides increasing detail.
+
+---
+
+# What is a Tactic?
+
+A tactic describes the **goal** or **objective** of an attacker.
+
+Examples:
+
+- Initial Access
+- Execution
+- Persistence
+- Privilege Escalation
+- Defense Evasion
+- Credential Access
+- Discovery
+- Lateral Movement
+- Collection
+- Exfiltration
+- Impact
+
+Think of tactics as answering:
+
+> **What is the attacker trying to accomplish?**
+
+---
+
+# What is a Technique?
+
+A technique describes **how** the attacker achieves a tactic.
+
+Example:
+
+Tactic:
+
+```text
+Credential Access
+```
+
+Technique:
+
+```text
+Brute Force
+```
+
+Another example:
+
+Tactic:
+
+```text
+Persistence
+```
+
+Technique:
+
+```text
+Scheduled Task
+```
+
+---
+
+# What is a Sub-Technique?
+
+Some techniques are further divided into more specific attack methods.
+
+Example:
+
+Technique:
+
+```text
+Brute Force
+```
+
+Sub-techniques may include:
+
+- Password Guessing
+- Password Spraying
+- Credential Stuffing
+
+Sub-techniques provide greater analytical detail.
+
+---
+
+# MITRE ATT&CK Structure
+
+```text
+Tactic
+
+↓
+
+Technique
+
+↓
+
+Sub-Technique
+```
+
+Example:
+
+```text
+Credential Access
+
+↓
+
+Brute Force
+
+↓
+
+Password Guessing
+```
+
+---
+
+# ATT&CK Tactics
+
+The Enterprise ATT&CK Matrix currently includes tactics such as:
+
+```text
+Reconnaissance
+
+↓
+
+Resource Development
+
+↓
+
+Initial Access
+
+↓
+
+Execution
+
+↓
+
+Persistence
+
+↓
+
+Privilege Escalation
+
+↓
+
+Defense Evasion
+
+↓
+
+Credential Access
+
+↓
+
+Discovery
+
+↓
+
+Lateral Movement
+
+↓
+
+Collection
+
+↓
+
+Command and Control
+
+↓
+
+Exfiltration
+
+↓
+
+Impact
+```
+
+These tactics collectively describe the lifecycle of an attack.
+
+---
+
+# Example Attack Chain
+
+Consider a ransomware attack.
+
+```text
+Phishing Email
+
+↓
+
+User Opens Attachment
+
+↓
+
+Malware Executes
+
+↓
+
+Persistence Created
+
+↓
+
+Credentials Stolen
+
+↓
+
+Administrator Privileges
+
+↓
+
+Lateral Movement
+
+↓
+
+File Encryption
+```
+
+Each step maps to one or more ATT&CK tactics and techniques.
+
+---
+
+# Why SOC Analysts Use MITRE
+
+MITRE provides a common language.
+
+Instead of saying:
+
+```text
+Something suspicious happened.
+```
+
+An analyst can state:
+
+```text
+Technique T1110
+
+Brute Force
+
+Credential Access
+```
+
+Every security professional understands exactly what this means.
+
+---
+
+# MITRE Mapping in Wazuh
+
+One of Wazuh's strengths is automatic MITRE mapping.
+
+When a detection rule matches,
+
+Wazuh can associate it with:
+
+- MITRE Tactic
+- MITRE Technique
+- Technique ID
+
+This appears directly in the dashboard.
+
+---
+
+# Example
+
+Suppose Wazuh detects repeated SSH login failures.
+
+Rule triggers.
+
+Dashboard displays:
+
+```text
+Technique
+
+T1110
+
+↓
+
+Brute Force
+
+↓
+
+Credential Access
+```
+
+The analyst immediately understands the attacker's objective.
+
+---
+
+# SSH Brute Force Example
+
+Attack:
+
+```text
+Attacker
+
+↓
+
+SSH Login
+
+↓
+
+Wrong Password
+
+↓
+
+Wrong Password
+
+↓
+
+Wrong Password
+
+↓
+
+Correct Password
+```
+
+Logs Generated:
+
+```text
+Authentication Failure
+
+↓
+
+Authentication Failure
+
+↓
+
+Authentication Failure
+
+↓
+
+Authentication Success
+```
+
+Wazuh Rule:
+
+```text
+Multiple Failed Logins
+
+↓
+
+Alert
+```
+
+MITRE Mapping:
+
+```text
+Credential Access
+
+↓
+
+Brute Force
+
+↓
+
+T1110
+```
+
+---
+
+# Why Mapping Matters
+
+Without MITRE:
+
+```text
+Alert Generated
+```
+
+With MITRE:
+
+```text
+Alert
+
+↓
+
+Attack Objective
+
+↓
+
+Technique
+
+↓
+
+Possible Next Steps
+
+↓
+
+Recommended Investigation
+```
+
+Analysts gain immediate context.
+
+---
+
+# Threat Hunting
+
+MITRE ATT&CK is widely used for threat hunting.
+
+Threat hunting differs from traditional monitoring.
+
+Traditional monitoring:
+
+```text
+Alert
+
+↓
+
+Investigate
+```
+
+Threat hunting:
+
+```text
+No Alert
+
+↓
+
+Search for Hidden Attacker Activity
+```
+
+Analysts proactively search for attacker behaviours.
+
+---
+
+# Coverage Analysis
+
+Organizations often ask:
+
+> **Can we detect every ATT&CK technique?**
+
+Usually,
+
+the answer is **no**.
+
+SOC teams therefore perform:
+
+```text
+ATT&CK Coverage Analysis
+```
+
+This identifies:
+
+- Detectable techniques
+- Missing detections
+- Monitoring gaps
+
+Improving coverage strengthens the SOC.
+
+---
+
+# Purple Team Exercises
+
+Purple Teaming commonly uses MITRE ATT&CK.
+
+Workflow:
+
+```text
+Red Team
+
+↓
+
+Simulate Technique
+
+↓
+
+Blue Team
+
+↓
+
+Verify Detection
+
+↓
+
+Improve Rule
+
+↓
+
+Repeat
+```
+
+The objective is continuous improvement rather than competition.
+
+---
+
+# ATT&CK and Incident Response
+
+Suppose a SOC analyst observes:
+
+```text
+PowerShell Execution
+
+↓
+
+Credential Dumping
+
+↓
+
+New Service Created
+
+↓
+
+Remote Desktop Connection
+```
+
+Using ATT&CK,
+
+the analyst can reconstruct the attack sequence and predict likely attacker objectives.
+
+This improves response efficiency.
+
+---
+
+# MITRE IDs
+
+Each technique has a unique identifier.
+
+Examples:
+
+| Technique | MITRE ID |
+|------------|-----------|
+| Brute Force | T1110 |
+| PowerShell | T1059 |
+| Command Shell | T1059.003 |
+| Scheduled Task | T1053 |
+| Remote Services | T1021 |
+| Credential Dumping | T1003 |
+
+These IDs are commonly referenced in SOC reports.
+
+---
+
+# Benefits of MITRE Integration
+
+MITRE integration provides:
+
+- Standard terminology
+- Better investigations
+- Improved reporting
+- Faster analyst training
+- Better rule creation
+- Threat hunting support
+- Purple Team collaboration
+
+---
+
+# Limitations
+
+MITRE ATT&CK:
+
+- Does not prevent attacks.
+- Does not detect attacks by itself.
+- Is not a vulnerability scanner.
+
+Instead,
+
+it provides a framework for understanding attacker behaviour.
+
+Detection still depends on tools such as:
+
+- Wazuh
+- Splunk
+- Microsoft Sentinel
+- QRadar
+- Elastic Security
+
+---
+
+# Learning Objectives
+
+After completing this section, students should be able to:
+
+- Explain the purpose of the MITRE ATT&CK Framework.
+- Differentiate tactics, techniques, and sub-techniques.
+- Describe how Wazuh maps alerts to ATT&CK techniques.
+- Explain why ATT&CK is useful for SOC analysts.
+- Understand how ATT&CK supports threat hunting and Purple Team exercises.
+
+---
+
+# Interview Questions
+
+## What is the MITRE ATT&CK Framework?
+
+The MITRE ATT&CK Framework is a publicly available knowledge base that documents real-world attacker behaviour using tactics, techniques, and procedures.
+
+---
+
+## What is the difference between a tactic and a technique?
+
+A tactic represents the attacker's objective, while a technique describes the method used to achieve that objective.
+
+---
+
+## Why does Wazuh integrate with MITRE ATT&CK?
+
+Wazuh maps alerts to ATT&CK techniques to provide analysts with standardized context about attacker behaviour, enabling faster investigation and response.
+
+---
+
+## What is threat hunting?
+
+Threat hunting is the proactive search for hidden attacker activity that may not have generated automated alerts.
+
+---
+
+## Why is MITRE ATT&CK important for Purple Teams?
+
+It provides a common framework that allows Red Teams and Blue Teams to validate detections, improve monitoring, and strengthen organizational security.
+
+---
+
+# Key Takeaways
+
+- MITRE ATT&CK is a standardized framework for describing attacker behaviour.
+- The framework organizes attacks into tactics, techniques, and sub-techniques.
+- Wazuh enriches alerts by automatically mapping them to MITRE ATT&CK techniques.
+- MITRE integration improves investigations, reporting, threat hunting, and Purple Team collaboration.
+- Understanding ATT&CK enables SOC analysts to move beyond individual alerts and reconstruct complete attack chains.
+
+
+# Session 11 – Defensive Security and the Security Operations Centre (SOC)
+## Part 8 – Incident Response Lifecycle and Security Incident Handling
+
+**Course:** C-DAC Kolkata – Cybersecurity Industry Exposure Program  
+**Module:** Incident Response, Wazuh Active Response and SOC Operations
+
+---
+
+# Introduction
+
+Detecting an attack is only one part of cybersecurity.
+
+A Security Operations Centre (SOC) becomes valuable only when it can **respond quickly and effectively** after detecting suspicious activity.
+
+This process is known as **Incident Response (IR).**
+
+An Incident Response process provides a structured methodology for:
+
+- Detecting attacks
+- Limiting damage
+- Preserving evidence
+- Restoring business operations
+- Preventing future incidents
+
+Without an Incident Response process, organizations may:
+
+- Respond too slowly
+- Destroy forensic evidence
+- Allow attackers to remain inside the network
+- Increase financial loss
+- Damage customer trust
+
+---
+
+# What is an Incident?
+
+A **security incident** is any event that compromises, or has the potential to compromise, the:
+
+- Confidentiality
+- Integrity
+- Availability
+
+of information or information systems.
+
+Examples include:
+
+- Malware infection
+- Ransomware attack
+- Data breach
+- Unauthorized access
+- Privilege escalation
+- Insider threat
+- Denial-of-Service attack
+- Web application compromise
+
+Not every alert is an incident.
+
+An incident is confirmed after investigation.
+
+---
+
+# Event vs Alert vs Incident
+
+One of the most important concepts for SOC analysts is understanding the relationship between events, alerts, and incidents.
+
+```text
+Event
+
+↓
+
+Alert
+
+↓
+
+Investigation
+
+↓
+
+Incident
+
+↓
+
+Response
+```
+
+### Event
+
+Something happened.
+
+Example:
+
+```text
+User Login
+```
+
+---
+
+### Alert
+
+The SIEM believes something suspicious happened.
+
+Example:
+
+```text
+20 Failed Login Attempts
+```
+
+---
+
+### Incident
+
+The analyst confirms malicious activity.
+
+Example:
+
+```text
+Confirmed SSH Brute Force Attack
+```
+
+---
+
+# Why Incident Response is Important
+
+A rapid response helps organizations:
+
+- Minimize downtime
+- Reduce financial loss
+- Prevent data theft
+- Stop malware spread
+- Preserve evidence
+- Meet compliance requirements
+- Improve customer trust
+
+---
+
+# NIST Incident Response Lifecycle
+
+The instructor introduced the widely accepted **NIST Incident Response Lifecycle**.
+
+It consists of six phases.
+
+```text
+Preparation
+
+↓
+
+Detection & Analysis
+
+↓
+
+Containment
+
+↓
+
+Eradication
+
+↓
+
+Recovery
+
+↓
+
+Lessons Learned
+```
+
+This lifecycle forms the basis of most enterprise Incident Response programs.
+
+---
+
+# Phase 1 – Preparation
+
+Preparation occurs **before** an attack happens.
+
+The organization prepares people, processes, and technology.
+
+Examples include:
+
+- Security policies
+- Incident Response Plan
+- Asset inventory
+- Backup strategy
+- Logging
+- SIEM deployment
+- Security awareness training
+- Playbooks
+- Communication procedures
+
+Preparation determines how effectively an organization responds later.
+
+---
+
+# Preparation Checklist
+
+Examples:
+
+✔ Security monitoring enabled
+
+✔ Backup available
+
+✔ Logs collected
+
+✔ Incident Response team identified
+
+✔ Contact information documented
+
+✔ Escalation process defined
+
+✔ Detection rules configured
+
+---
+
+# Phase 2 – Detection and Analysis
+
+This phase begins when suspicious activity is detected.
+
+Possible detection sources:
+
+- SIEM
+- Antivirus
+- EDR
+- IDS
+- Firewall
+- User reports
+- Threat Intelligence
+
+SOC analysts investigate:
+
+- Is this malicious?
+- Which systems are affected?
+- How serious is it?
+- Is immediate containment required?
+
+---
+
+# Detection Workflow
+
+```text
+Logs
+
+↓
+
+Correlation
+
+↓
+
+Alert
+
+↓
+
+SOC Investigation
+
+↓
+
+Incident Confirmed
+```
+
+---
+
+# Indicators of Compromise (IoCs)
+
+During analysis, analysts search for **Indicators of Compromise (IoCs).**
+
+Examples:
+
+- Malicious IP Address
+- Malicious Domain
+- Suspicious Hash
+- Registry Modification
+- New Administrator Account
+- Unknown Scheduled Task
+- Web Shell
+- PowerShell Abuse
+
+IoCs provide evidence that a compromise has occurred.
+
+---
+
+# Indicators of Attack (IoAs)
+
+IoCs describe evidence **after compromise.**
+
+IoAs describe **attacker behaviour** while an attack is occurring.
+
+Example:
+
+```text
+PowerShell
+
+↓
+
+Credential Dumping
+
+↓
+
+Privilege Escalation
+```
+
+Modern detection increasingly focuses on behavioural indicators rather than only static indicators.
+
+---
+
+# Phase 3 – Containment
+
+Once an incident is confirmed,
+
+the priority becomes preventing further damage.
+
+Containment limits attacker movement.
+
+Examples:
+
+- Disconnect compromised device
+- Disable compromised account
+- Block malicious IP
+- Stop malicious process
+- Disable vulnerable service
+- Isolate infected endpoint
+
+Containment is usually divided into:
+
+### Short-Term Containment
+
+Immediate action to stop the attack.
+
+---
+
+### Long-Term Containment
+
+Temporary fixes until permanent remediation is completed.
+
+---
+
+# Example
+
+Suppose ransomware is detected.
+
+Containment may include:
+
+```text
+Disconnect Endpoint
+
+↓
+
+Disable Network Access
+
+↓
+
+Prevent File Encryption
+
+↓
+
+Preserve Evidence
+```
+
+---
+
+# Phase 4 – Eradication
+
+Containment stops the attack.
+
+Eradication removes the root cause.
+
+Examples:
+
+- Delete malware
+- Remove persistence
+- Patch vulnerabilities
+- Remove malicious accounts
+- Delete web shells
+- Reset passwords
+
+The goal is complete removal of attacker access.
+
+---
+
+# Phase 5 – Recovery
+
+Recovery restores business operations.
+
+Examples:
+
+- Restore backups
+- Reconnect systems
+- Monitor recovered systems
+- Validate integrity
+- Resume business operations
+
+Recovery should occur only after the organization is confident that the attacker no longer has access.
+
+---
+
+# Phase 6 – Lessons Learned
+
+This is one of the most valuable phases.
+
+Questions include:
+
+- What happened?
+- Why did it happen?
+- Which controls failed?
+- Which detections worked?
+- Which detections failed?
+- How can we improve?
+
+Organizations update:
+
+- Detection rules
+- Playbooks
+- Policies
+- Training
+- Monitoring
+
+Continuous improvement is a key objective of mature SOCs.
+
+---
+
+# Incident Severity
+
+Organizations often classify incidents.
+
+Example:
+
+| Severity | Example |
+|----------|---------|
+| Low | Single Failed Login |
+| Medium | Malware Detected |
+| High | Privilege Escalation |
+| Critical | Ransomware / Data Breach |
+
+Severity determines escalation priority.
+
+---
+
+# Escalation Process
+
+Not every incident is handled by the same analyst.
+
+Example:
+
+```text
+Tier 1
+
+↓
+
+Tier 2
+
+↓
+
+Tier 3
+
+↓
+
+Incident Response Team
+
+↓
+
+Management
+```
+
+Higher-severity incidents receive faster escalation.
+
+---
+
+# Documentation
+
+Every incident should be documented.
+
+Typical report includes:
+
+- Timeline
+- Affected systems
+- Evidence
+- IoCs
+- MITRE ATT&CK Mapping
+- Root Cause
+- Containment Actions
+- Recovery Steps
+- Recommendations
+
+Proper documentation supports:
+
+- Compliance
+- Audits
+- Legal proceedings
+- Future investigations
+
+---
+
+# Chain of Custody
+
+When collecting digital evidence,
+
+organizations must preserve its integrity.
+
+Chain of Custody records:
+
+- Who collected evidence
+- When it was collected
+- How it was stored
+- Who accessed it
+- When it was transferred
+
+This is especially important if evidence may be used in legal proceedings.
+
+---
+
+# Automation in Incident Response
+
+Modern SOCs increasingly automate repetitive tasks.
+
+Examples:
+
+- Block malicious IP
+- Disable compromised account
+- Isolate endpoint
+- Create ticket
+- Notify analyst
+
+Automation reduces response time while allowing analysts to focus on investigation.
+
+---
+
+# Common Challenges
+
+Incident Response teams often face:
+
+- Alert fatigue
+- False positives
+- Limited visibility
+- Insider threats
+- Cloud environments
+- Encryption
+- Sophisticated attackers
+
+Continuous improvement helps overcome these challenges.
+
+---
+
+# Learning Objectives
+
+After completing this section, students should be able to:
+
+- Define a security incident.
+- Explain the NIST Incident Response Lifecycle.
+- Differentiate events, alerts, and incidents.
+- Describe containment, eradication, and recovery.
+- Explain the importance of IoCs and IoAs.
+- Understand incident documentation and evidence preservation.
+
+---
+
+# Interview Questions
+
+## What is Incident Response?
+
+Incident Response is a structured process used to detect, investigate, contain, eradicate, recover from, and learn from cybersecurity incidents.
+
+---
+
+## What is the first phase of the NIST Incident Response Lifecycle?
+
+Preparation.
+
+---
+
+## What is the purpose of containment?
+
+Containment prevents an attacker from causing additional damage while preserving evidence for investigation.
+
+---
+
+## What is the difference between containment and eradication?
+
+Containment limits the attack, while eradication removes the attacker's presence and the root cause of the compromise.
+
+---
+
+## What is an Indicator of Compromise (IoC)?
+
+An Indicator of Compromise is evidence suggesting that a system has been compromised, such as a malicious IP address, suspicious file hash, or unauthorized account.
+
+---
+
+## Why is the "Lessons Learned" phase important?
+
+It enables organizations to improve detection rules, policies, playbooks, training, and overall security posture based on the experience gained during the incident.
+
+---
+
+# Key Takeaways
+
+- Incident Response transforms threat detection into structured action.
+- The NIST lifecycle consists of Preparation, Detection & Analysis, Containment, Eradication, Recovery, and Lessons Learned.
+- Effective response minimizes damage while preserving forensic evidence.
+- Documentation, evidence handling, and continuous improvement are essential components of a mature SOC.
+- Automation and well-defined playbooks significantly improve response speed and consistency.
+
+# Session 11 – Defensive Security and the Security Operations Centre (SOC)
+## Part 9 – Wazuh Active Response, Security Automation, SOC Metrics and End-to-End Incident Scenario
+
+**Course:** C-DAC Kolkata – Cybersecurity Industry Exposure Program  
+**Module:** Wazuh Active Response & Modern SOC Operations
+
+---
+
+# Introduction
+
+So far, we have studied:
+
+- Log Collection
+- SIEM
+- Wazuh Architecture
+- File Integrity Monitoring
+- MITRE ATT&CK
+- Incident Response
+
+All of these technologies help **detect** attacks.
+
+However, modern cyber attacks spread extremely quickly.
+
+For example:
+
+- Ransomware can encrypt thousands of files within minutes.
+- Worms can infect hundreds of machines.
+- Credential theft can immediately lead to privilege escalation.
+
+Waiting for a human analyst to manually respond may take too long.
+
+This introduces the concept of **Active Response**.
+
+---
+
+# What is Active Response?
+
+Active Response is the automatic execution of predefined defensive actions when specific security conditions are met.
+
+Instead of only generating an alert,
+
+the system can automatically perform defensive operations.
+
+Example:
+
+```text
+Attack Detected
+
+↓
+
+Alert Generated
+
+↓
+
+Automatically Block Attacker
+
+↓
+
+Notify Analyst
+```
+
+This significantly reduces response time.
+
+---
+
+# Why Active Response is Needed
+
+Consider the following scenario.
+
+Without automation:
+
+```text
+Attack
+
+↓
+
+Alert
+
+↓
+
+SOC Analyst Notices Alert
+
+↓
+
+Analyst Investigates
+
+↓
+
+Analyst Blocks Attacker
+
+↓
+
+Attack Stops
+```
+
+Time Taken:
+
+```text
+15 Minutes
+```
+
+During these 15 minutes,
+
+the attacker may continue stealing data.
+
+---
+
+With Active Response:
+
+```text
+Attack
+
+↓
+
+Alert
+
+↓
+
+Automatic Block
+
+↓
+
+SOC Notification
+
+↓
+
+Analyst Reviews
+```
+
+Time Taken:
+
+```text
+2 Seconds
+```
+
+Automation minimizes attacker dwell time.
+
+---
+
+# Active Response Workflow
+
+The complete workflow is:
+
+```text
+Endpoint Activity
+
+↓
+
+Log Generated
+
+↓
+
+Agent Sends Log
+
+↓
+
+Manager Processes Log
+
+↓
+
+Rule Triggered
+
+↓
+
+Severity Evaluated
+
+↓
+
+Active Response Executed
+
+↓
+
+SOC Analyst Notified
+```
+
+Notice that automation happens **before** the analyst begins investigation.
+
+---
+
+# Examples of Active Response
+
+Depending on organizational policy,
+
+Wazuh can automatically perform actions such as:
+
+- Block malicious IP addresses
+- Disable compromised user accounts
+- Kill malicious processes
+- Delete malicious files
+- Stop suspicious services
+- Isolate compromised endpoints
+- Execute custom scripts
+- Notify administrators
+- Create helpdesk tickets
+
+---
+
+# Example 1 – SSH Brute Force Attack
+
+Suppose an attacker repeatedly attempts to log in using SSH.
+
+Activity:
+
+```text
+100 Failed Logins
+
+↓
+
+Wazuh Rule Triggered
+
+↓
+
+Severity = High
+
+↓
+
+Active Response
+
+↓
+
+Firewall Blocks Source IP
+```
+
+The attack stops automatically without waiting for manual intervention.
+
+---
+
+# Example 2 – Malware Detection
+
+Suppose an endpoint detects ransomware.
+
+Workflow:
+
+```text
+Malware Detected
+
+↓
+
+Critical Alert
+
+↓
+
+Endpoint Isolation
+
+↓
+
+SOC Notification
+
+↓
+
+Investigation Begins
+```
+
+The malware cannot spread to additional systems.
+
+---
+
+# Example 3 – File Integrity Monitoring
+
+Suppose Syscheck detects:
+
+```text
+shell.php
+
+uploaded into
+
+/var/www/html
+```
+
+Active Response may:
+
+- Quarantine the file
+- Notify the SOC
+- Create an incident ticket
+
+This reduces the risk of attacker persistence.
+
+---
+
+# Response Scripts
+
+Wazuh Active Response relies on scripts.
+
+Examples include:
+
+```text
+Firewall Script
+
+↓
+
+Block IP
+```
+
+```text
+Endpoint Script
+
+↓
+
+Kill Process
+```
+
+```text
+Linux Script
+
+↓
+
+Disable User
+```
+
+Organizations can also create custom scripts tailored to their environment.
+
+---
+
+# Advantages of Automation
+
+Automation provides several benefits.
+
+### Faster Response
+
+Human reaction:
+
+```text
+Minutes
+```
+
+Automation:
+
+```text
+Seconds
+```
+
+---
+
+### Consistency
+
+Automation performs the same response every time.
+
+Human responses may vary.
+
+---
+
+### Reduced Analyst Workload
+
+Analysts spend less time performing repetitive actions.
+
+Instead,
+
+they focus on investigation.
+
+---
+
+### Reduced Damage
+
+Rapid containment reduces:
+
+- Data loss
+- Malware spread
+- Business downtime
+
+---
+
+# Risks of Automation
+
+Automation must be configured carefully.
+
+Example:
+
+Suppose a rule mistakenly identifies a legitimate administrator as malicious.
+
+Active Response:
+
+```text
+Disable Administrator Account
+```
+
+Business operations may be disrupted.
+
+Therefore,
+
+organizations generally automate only well-understood response actions.
+
+---
+
+# Playbooks
+
+A **Playbook** is a documented set of response steps for a specific incident.
+
+Example:
+
+SSH Brute Force Playbook
+
+```text
+Alert Received
+
+↓
+
+Verify Source IP
+
+↓
+
+Check Authentication Logs
+
+↓
+
+Block IP
+
+↓
+
+Reset Password
+
+↓
+
+Investigate User Activity
+
+↓
+
+Document Incident
+```
+
+Playbooks ensure consistent response across analysts.
+
+---
+
+# Benefits of Playbooks
+
+Playbooks provide:
+
+- Standardization
+- Faster investigations
+- Reduced mistakes
+- Easier analyst training
+- Compliance support
+
+Every major SOC relies on documented playbooks.
+
+---
+
+# Mean Time To Detect (MTTD)
+
+One of the most important SOC metrics is:
+
+```text
+MTTD
+
+↓
+
+Mean Time To Detect
+```
+
+Definition:
+
+Average time required to detect a security incident.
+
+Example:
+
+Attack begins:
+
+```text
+10:00 AM
+```
+
+Detected:
+
+```text
+10:08 AM
+```
+
+MTTD:
+
+```text
+8 Minutes
+```
+
+Lower values indicate better monitoring.
+
+---
+
+# Mean Time To Respond (MTTR)
+
+MTTR stands for:
+
+```text
+Mean Time To Respond
+```
+
+Definition:
+
+Average time required to contain and respond after detection.
+
+Example:
+
+Incident detected:
+
+```text
+10:08 AM
+```
+
+Contained:
+
+```text
+10:15 AM
+```
+
+MTTR:
+
+```text
+7 Minutes
+```
+
+Organizations continuously attempt to reduce both MTTD and MTTR.
+
+---
+
+# Why MTTD and MTTR Matter
+
+Attack Timeline:
+
+```text
+Attack Begins
+
+↓
+
+Detection
+
+↓
+
+Response
+
+↓
+
+Recovery
+```
+
+The longer the attacker remains undetected,
+
+the greater the damage.
+
+Reducing detection and response time is one of the primary objectives of a SOC.
+
+---
+
+# Alert Fatigue
+
+Large organizations receive thousands of alerts every day.
+
+Example:
+
+```text
+15,000 Alerts
+
+↓
+
+Only 25 Genuine Incidents
+```
+
+If analysts investigate every alert,
+
+important attacks may be overlooked.
+
+This problem is known as **Alert Fatigue**.
+
+---
+
+# Causes of Alert Fatigue
+
+Common causes include:
+
+- Poor detection rules
+- Duplicate alerts
+- False positives
+- Excessive logging
+- Low-priority notifications
+
+Proper rule tuning reduces alert fatigue.
+
+---
+
+# Rule Tuning
+
+Rule tuning involves improving detection logic.
+
+Example:
+
+Original Rule:
+
+```text
+Three Failed Logins
+
+↓
+
+Generate Alert
+```
+
+Too many false positives.
+
+Improved Rule:
+
+```text
+Ten Failed Logins
+
+AND
+
+Successful Login
+
+↓
+
+Generate Alert
+```
+
+This rule is more accurate.
+
+---
+
+# End-to-End Incident Scenario
+
+The instructor discussed how all concepts learned throughout the session connect together.
+
+Scenario:
+
+An attacker launches an SSH brute-force attack.
+
+```text
+Attacker
+
+↓
+
+SSH Login Attempts
+
+↓
+
+Linux Authentication Logs
+
+↓
+
+Wazuh Agent
+
+↓
+
+Manager
+
+↓
+
+Decoder
+
+↓
+
+Rule Evaluation
+
+↓
+
+MITRE Mapping
+
+↓
+
+High Severity Alert
+
+↓
+
+Active Response
+
+↓
+
+Firewall Blocks IP
+
+↓
+
+SOC Dashboard Updated
+
+↓
+
+Analyst Investigation
+
+↓
+
+Incident Report
+
+↓
+
+Lessons Learned
+```
+
+Notice how every component introduced in this session participates in the detection process.
+
+---
+
+# Complete SOC Workflow
+
+```text
+Collect Logs
+
+↓
+
+Normalize Logs
+
+↓
+
+Decode Events
+
+↓
+
+Apply Rules
+
+↓
+
+Correlate Events
+
+↓
+
+Generate Alerts
+
+↓
+
+MITRE Mapping
+
+↓
+
+Active Response
+
+↓
+
+SOC Investigation
+
+↓
+
+Incident Response
+
+↓
+
+Recovery
+
+↓
+
+Lessons Learned
+```
+
+This represents the complete lifecycle of modern security monitoring.
+
+---
+
+# Best Practices
+
+Organizations should:
+
+- Automate repetitive tasks.
+- Keep analysts involved in critical decisions.
+- Continuously tune rules.
+- Maintain updated playbooks.
+- Review incidents regularly.
+- Measure MTTD and MTTR.
+- Integrate threat intelligence.
+- Perform Purple Team exercises.
+
+---
+
+# Learning Objectives
+
+After completing this section, students should be able to:
+
+- Explain Active Response.
+- Describe automated incident handling.
+- Explain SOC playbooks.
+- Define MTTD and MTTR.
+- Understand alert fatigue.
+- Explain rule tuning.
+- Describe an end-to-end SOC detection workflow.
+
+---
+
+# Interview Questions
+
+## What is Active Response?
+
+Active Response is the automatic execution of predefined security actions when specific detection rules are triggered.
+
+---
+
+## Why is Active Response important?
+
+It reduces response time, limits attacker movement, minimizes damage, and improves overall security operations.
+
+---
+
+## What is a Playbook?
+
+A playbook is a documented sequence of actions that guides analysts through the response to a specific type of security incident.
+
+---
+
+## What is MTTD?
+
+Mean Time To Detect is the average time required to identify a security incident after it begins.
+
+---
+
+## What is MTTR?
+
+Mean Time To Respond is the average time required to contain and respond to a detected incident.
+
+---
+
+## What is Alert Fatigue?
+
+Alert fatigue occurs when analysts receive an overwhelming number of alerts, making it difficult to identify genuine security incidents.
+
+---
+
+## Why is Rule Tuning necessary?
+
+Rule tuning improves detection accuracy by reducing false positives, minimizing unnecessary alerts, and helping analysts focus on real threats.
+
+---
+
+# Key Takeaways
+
+- Active Response enables Wazuh to automatically execute defensive actions immediately after threat detection.
+- Automation significantly reduces attacker dwell time and limits damage.
+- Playbooks ensure consistent and repeatable incident handling.
+- SOC performance is measured using metrics such as MTTD and MTTR.
+- Rule tuning and alert prioritization are essential for reducing alert fatigue.
+- A modern SOC integrates detection, automation, investigation, and continuous improvement into a single security workflow.
+
+# Session 11 – Defensive Security and the Security Operations Centre (SOC)
+## Part 10 – Complete Revision Guide, Practical Summary, Interview Preparation and Final Notes
+
+**Course:** C-DAC Kolkata – Cybersecurity Industry Exposure Program  
+**Module:** Defensive Security, SIEM, Wazuh and SOC Operations
+
+---
+
+# Session 11 Complete Learning Flow
+
+The entire session can be summarized using the following flow.
+
+```text
+Modern Cyber Attacks
+
+↓
+
+Need for Defensive Security
+
+↓
+
+Security Operations Centre (SOC)
+
+↓
+
+SIEM
+
+↓
+
+Wazuh Platform
+
+↓
+
+Log Collection
+
+↓
+
+Log Analysis
+
+↓
+
+Threat Detection
+
+↓
+
+MITRE ATT&CK Mapping
+
+↓
+
+File Integrity Monitoring
+
+↓
+
+Incident Response
+
+↓
+
+Active Response
+
+↓
+
+Continuous Improvement
+```
+
+This represents the lifecycle of a modern Security Operations Centre.
+
+---
+
+# Complete Wazuh Data Flow
+
+The instructor repeatedly emphasized understanding how information flows through Wazuh.
+
+```text
+User Activity
+
+↓
+
+Operating System
+
+↓
+
+Log Generated
+
+↓
+
+Wazuh Agent
+
+↓
+
+Encrypted Communication
+
+↓
+
+Wazuh Manager
+
+↓
+
+Decoder
+
+↓
+
+Normalization
+
+↓
+
+Rule Matching
+
+↓
+
+Correlation
+
+↓
+
+Alert Generation
+
+↓
+
+Indexer
+
+↓
+
+Dashboard
+
+↓
+
+SOC Analyst
+
+↓
+
+Incident Response
+```
+
+This is the single most important diagram from the session.
+
+---
+
+# End-to-End Attack Detection Workflow
+
+Suppose an attacker launches an SSH brute-force attack.
+
+The complete sequence is:
+
+```text
+Attacker
+
+↓
+
+SSH Login Attempts
+
+↓
+
+Linux Authentication Logs
+
+↓
+
+Wazuh Agent
+
+↓
+
+Manager Receives Events
+
+↓
+
+Decoder Extracts Fields
+
+↓
+
+Rule Matches
+
+↓
+
+MITRE ATT&CK Mapping
+
+↓
+
+High Severity Alert
+
+↓
+
+Active Response
+
+↓
+
+Firewall Blocks IP
+
+↓
+
+SOC Dashboard Updated
+
+↓
+
+Tier-1 Analyst Reviews
+
+↓
+
+Tier-2 Investigation
+
+↓
+
+Incident Confirmed
+
+↓
+
+Containment
+
+↓
+
+Recovery
+
+↓
+
+Lessons Learned
+```
+
+Notice that every topic covered during the session contributes to this workflow.
+
+---
+
+# Relationship Between Major Components
+
+```text
+Operating System
+
+↓
+
+Logs
+
+↓
+
+SIEM
+
+↓
+
+Rules
+
+↓
+
+Alerts
+
+↓
+
+SOC
+
+↓
+
+Incident Response
+```
+
+Everything begins with **logs**.
+
+Without logs:
+
+- No SIEM
+- No alerts
+- No investigations
+- No incident response
+
+---
+
+# Defensive Security Mind Map
+
+```text
+Defensive Security
+
+├── SOC
+
+│      ├── Tier 1
+
+│      ├── Tier 2
+
+│      ├── Tier 3
+
+│      └── SOC Manager
+
+│
+
+├── SIEM
+
+│      ├── Log Collection
+
+│      ├── Normalization
+
+│      ├── Correlation
+
+│      ├── Alerting
+
+│      └── Dashboard
+
+│
+
+├── Wazuh
+
+│      ├── Agent
+
+│      ├── Manager
+
+│      ├── Indexer
+
+│      └── Dashboard
+
+│
+
+├── MITRE ATT&CK
+
+│      ├── Tactics
+
+│      ├── Techniques
+
+│      └── Threat Hunting
+
+│
+
+├── Incident Response
+
+│      ├── Detection
+
+│      ├── Containment
+
+│      ├── Eradication
+
+│      ├── Recovery
+
+│      └── Lessons Learned
+
+│
+
+└── Active Response
+
+       ├── Automation
+
+       ├── Blocking
+
+       ├── Isolation
+
+       └── Playbooks
+```
+
+---
+
+# SOC Workflow
+
+```text
+Collect Logs
+
+↓
+
+Store Logs
+
+↓
+
+Decode Logs
+
+↓
+
+Normalize Data
+
+↓
+
+Correlation Rules
+
+↓
+
+Alert
+
+↓
+
+SOC Investigation
+
+↓
+
+Incident
+
+↓
+
+Response
+
+↓
+
+Recovery
+
+↓
+
+Documentation
+
+↓
+
+Continuous Improvement
+```
+
+---
+
+# SIEM Workflow
+
+```text
+Data Sources
+
+↓
+
+Log Collection
+
+↓
+
+Parsing
+
+↓
+
+Normalization
+
+↓
+
+Rule Evaluation
+
+↓
+
+Correlation
+
+↓
+
+Alert Generation
+
+↓
+
+Dashboard
+
+↓
+
+Reports
+```
+
+---
+
+# Incident Response Workflow
+
+```text
+Preparation
+
+↓
+
+Detection
+
+↓
+
+Analysis
+
+↓
+
+Containment
+
+↓
+
+Eradication
+
+↓
+
+Recovery
+
+↓
+
+Lessons Learned
+```
+
+This is based on the NIST Incident Response Lifecycle.
+
+---
+
+# MITRE ATT&CK Workflow
+
+```text
+Alert
+
+↓
+
+MITRE Mapping
+
+↓
+
+Tactic
+
+↓
+
+Technique
+
+↓
+
+Investigation
+
+↓
+
+Threat Hunting
+
+↓
+
+Improved Detection
+```
+
+---
+
+# File Integrity Monitoring Workflow
+
+```text
+Baseline
+
+↓
+
+File Monitoring
+
+↓
+
+Hash Comparison
+
+↓
+
+Modification?
+
+↓
+
+Alert
+
+↓
+
+Investigation
+```
+
+---
+
+# Active Response Workflow
+
+```text
+Alert
+
+↓
+
+Rule Triggered
+
+↓
+
+Active Response
+
+↓
+
+Firewall Block
+
+↓
+
+Endpoint Isolation
+
+↓
+
+SOC Notification
+```
+
+---
+
+# Important Terminology
+
+| Term | Meaning |
+|------|---------|
+| SOC | Security Operations Centre |
+| SIEM | Security Information and Event Management |
+| XDR | Extended Detection and Response |
+| FIM | File Integrity Monitoring |
+| EDR | Endpoint Detection and Response |
+| IoC | Indicator of Compromise |
+| IoA | Indicator of Attack |
+| MITRE | Adversarial Tactics, Techniques and Common Knowledge |
+| CVE | Common Vulnerabilities and Exposures |
+| CVSS | Common Vulnerability Scoring System |
+| MTTD | Mean Time To Detect |
+| MTTR | Mean Time To Respond |
+| SCA | Security Configuration Assessment |
+
+---
+
+# Wazuh Components
+
+| Component | Responsibility |
+|------------|----------------|
+| Agent | Collect endpoint logs |
+| Manager | Process events and apply rules |
+| Decoder | Parse raw logs |
+| Rule Engine | Match suspicious activity |
+| Indexer | Store searchable data |
+| Dashboard | Display alerts and reports |
+
+---
+
+# Responsibilities of a SOC Analyst
+
+A SOC analyst should be able to:
+
+- Monitor dashboards.
+- Review alerts.
+- Investigate suspicious events.
+- Validate incidents.
+- Collect evidence.
+- Escalate incidents.
+- Contain attacks.
+- Document findings.
+- Improve detection rules.
+
+---
+
+# Common Interview Questions
+
+## What is the difference between SIEM and Wazuh?
+
+A SIEM is a category of security platforms used for centralized log collection, correlation, and threat detection.
+
+Wazuh is an open-source security platform that implements SIEM capabilities while also providing endpoint detection, file integrity monitoring, vulnerability detection, and active response.
+
+---
+
+## Why are logs important?
+
+Logs provide historical evidence of system activity and enable security monitoring, incident investigation, digital forensics, compliance, and threat detection.
+
+---
+
+## What happens if logs are not collected?
+
+Without logs:
+
+- Security incidents cannot be investigated effectively.
+- Threat detection becomes extremely limited.
+- Compliance requirements may not be met.
+- Digital forensic analysis becomes difficult.
+
+---
+
+## Why is correlation important?
+
+Individual events often appear harmless.
+
+Correlation combines multiple related events to identify attack patterns that would otherwise remain undetected.
+
+---
+
+## Why is MITRE ATT&CK important?
+
+MITRE ATT&CK provides a standardized framework for understanding attacker behaviour, improving detection engineering, supporting threat hunting, and enhancing incident response.
+
+---
+
+## Why is File Integrity Monitoring useful?
+
+It detects unauthorized modifications to important files, helping identify malware, web shells, insider threats, and persistence mechanisms.
+
+---
+
+## Why is Active Response important?
+
+Active Response automatically executes predefined defensive actions, reducing attacker dwell time and minimizing damage before manual investigation begins.
+
+---
+
+# Common Mistakes in SOC Operations
+
+Organizations frequently make the following mistakes:
+
+- Collecting logs but never reviewing them.
+- Generating alerts without tuning detection rules.
+- Ignoring low-severity alerts that may indicate larger attack chains.
+- Failing to update detection rules.
+- Not documenting incidents.
+- Delaying incident response.
+- Lacking tested playbooks.
+- Monitoring only servers while ignoring endpoints.
+
+---
+
+# Best Practices
+
+A mature SOC should:
+
+- Collect logs from all critical assets.
+- Maintain synchronized system time (NTP).
+- Retain logs securely.
+- Regularly tune SIEM rules.
+- Validate detections using Purple Team exercises.
+- Perform threat hunting.
+- Test incident response plans.
+- Automate repetitive response actions.
+- Continuously train analysts.
+
+---
+
+# One-Page Revision Sheet
+
+Remember the sequence:
+
+```text
+Endpoint
+
+↓
+
+Logs
+
+↓
+
+Agent
+
+↓
+
+Manager
+
+↓
+
+Decoder
+
+↓
+
+Rules
+
+↓
+
+Correlation
+
+↓
+
+Alert
+
+↓
+
+MITRE
+
+↓
+
+SOC
+
+↓
+
+Incident Response
+
+↓
+
+Recovery
+```
+
+Remember the Wazuh components:
+
+```text
+Agent
+
+↓
+
+Manager
+
+↓
+
+Indexer
+
+↓
+
+Dashboard
+```
+
+Remember the NIST Incident Response Lifecycle:
+
+```text
+Preparation
+
+↓
+
+Detection & Analysis
+
+↓
+
+Containment
+
+↓
+
+Eradication
+
+↓
+
+Recovery
+
+↓
+
+Lessons Learned
+```
+
+Remember the SOC progression:
+
+```text
+Log
+
+↓
+
+Event
+
+↓
+
+Alert
+
+↓
+
+Incident
+
+↓
+
+Response
+```
+
+---
+
+# Complete Session Summary
+
+This session marked the transition from **Offensive Security** to **Defensive Security**.
+
+Students learned why organizations require continuous monitoring instead of relying solely on preventive controls.
+
+The session introduced the concept of a **Security Operations Centre (SOC)** and explained how SIEM platforms centralize security visibility by collecting, normalizing, correlating, and analyzing logs from diverse systems.
+
+The architecture and capabilities of **Wazuh** were explored in detail, including:
+
+- Agent
+- Manager
+- Indexer
+- Dashboard
+- Decoders
+- Rules
+- Alerts
+
+Students learned how **File Integrity Monitoring (Syscheck)** detects unauthorized modifications to critical files and how vulnerability detection identifies outdated software with known CVEs.
+
+The **MITRE ATT&CK Framework** was introduced as a standardized method for understanding attacker behaviour and mapping alerts to real-world attack techniques.
+
+Finally, the session covered the **NIST Incident Response Lifecycle**, Wazuh Active Response, SOC automation, playbooks, performance metrics such as MTTD and MTTR, and the importance of continuous improvement through documentation and lessons learned.
+
+---
+
+# Final Learning Outcomes
+
+By the end of Session 11, students should be able to:
+
+- Explain the objectives of Defensive Security.
+- Describe the role and architecture of a Security Operations Centre.
+- Explain how SIEM platforms collect, process, and correlate security logs.
+- Understand the architecture and operation of Wazuh.
+- Explain File Integrity Monitoring and Vulnerability Detection.
+- Interpret MITRE ATT&CK mappings.
+- Describe the complete Incident Response Lifecycle.
+- Explain Active Response and SOC automation.
+- Understand the responsibilities of SOC analysts.
+- Apply defensive security concepts to real-world enterprise environments.
+
+---
+
+# Final Note
+
+The central message of this session is that **successful cybersecurity is not achieved solely by preventing attacks, but by building the capability to detect, investigate, respond to, and continuously learn from security incidents.** Modern organizations assume that breaches will occur and therefore invest heavily in visibility, monitoring, automation, and structured incident response. A well-designed SOC, supported by SIEM platforms such as Wazuh and guided by frameworks like MITRE ATT&CK and the NIST Incident Response Lifecycle, enables organizations to reduce attacker dwell time, minimize business impact, and continuously strengthen their security posture.
+
